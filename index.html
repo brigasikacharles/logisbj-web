@@ -4,63 +4,89 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>LogisBJ — Plateforme de location vérifiée au Bénin</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #fafaf7;
-  color: #1a1814;
-  font-size: 14px;
-  -webkit-tap-highlight-color: transparent;
+  background: #fafaf7; color: #1a1814; font-size: 14px;
+  overflow-x: hidden;
 }
-.container { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fafaf7; padding-bottom: 80px; }
+
+/* ===== STRUCTURE ===== */
+.app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fafaf7; padding-bottom: 70px; position: relative; }
 .header {
-  background: #fff; padding: 14px 16px; border-bottom: 0.5px solid #e8e4dc;
+  background: #fff; padding: 12px 16px; border-bottom: 0.5px solid #e8e4dc;
   display: flex; justify-content: space-between; align-items: center;
-  position: sticky; top: 0; z-index: 10;
+  position: sticky; top: 0; z-index: 50;
 }
 .logo { font-size: 18px; font-weight: 700; }
 .logo-or { color: #BA7517; }
+.api-status {
+  font-size: 9px; padding: 3px 7px; border-radius: 6px;
+  background: #EAF3DE; color: #27500A; font-weight: 600;
+}
+.api-status.error { background: #FCEBEB; color: #791F1F; }
 .user-pill {
   background: #FAEEDA; color: #633806; padding: 4px 10px; border-radius: 12px;
-  font-size: 11px; font-weight: 600;
+  font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer;
 }
-.tabs {
-  display: flex; background: #fff; border-bottom: 0.5px solid #e8e4dc;
-  position: sticky; top: 49px; z-index: 9;
+.user-pill .badge-non-lus {
+  background: #BA7517; color: #fff; border-radius: 8px;
+  padding: 1px 6px; font-size: 10px;
 }
-.tab {
-  flex: 1; padding: 12px; text-align: center; font-size: 12px; cursor: pointer;
-  border-bottom: 2px solid transparent; color: #6b6560; font-weight: 500;
+
+/* ===== TABS BOTTOM ===== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; background: #fff; border-top: 0.5px solid #e8e4dc;
+  display: flex; z-index: 50;
 }
-.tab.active { color: #BA7517; border-bottom-color: #BA7517; }
-.screen { display: none; padding: 16px; }
+.bottom-nav .tab {
+  flex: 1; padding: 10px 4px; text-align: center; cursor: pointer; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.bottom-nav .tab .ico { font-size: 18px; opacity: 0.5; transition: 0.15s; }
+.bottom-nav .tab .lbl { font-size: 10px; color: #6b6560; font-weight: 500; }
+.bottom-nav .tab.active .ico { opacity: 1; }
+.bottom-nav .tab.active .lbl { color: #BA7517; font-weight: 600; }
+.bottom-nav .tab .pill {
+  position: absolute; top: 6px; right: calc(50% - 22px);
+  background: #E24B4A; color: #fff; font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 8px;
+}
+
+.screen { display: none; padding: 14px; }
 .screen.active { display: block; }
+
+/* ===== COMPOSANTS GÉNÉRIQUES ===== */
 .card {
-  background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px;
+  background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px;
   border: 0.5px solid #e8e4dc;
 }
 .btn {
   background: #BA7517; color: #fff; border: 0; padding: 13px 16px;
   border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
-  width: 100%; transition: opacity 0.15s;
+  width: 100%; transition: opacity 0.15s; font-family: inherit;
 }
 .btn:hover { opacity: 0.9; }
 .btn:disabled { background: #D3D1C7; cursor: not-allowed; }
 .btn-secondary { background: #fff; color: #BA7517; border: 1.5px solid #BA7517; }
+.btn-ghost { background: transparent; color: #6b6560; border: 0.5px solid #e8e4dc; }
 .btn-danger { background: #791F1F; }
+.btn-sm { padding: 8px 12px; font-size: 12px; width: auto; }
 input, select, textarea {
   width: 100%; padding: 12px 13px; border: 0.5px solid #e8e4dc;
   border-radius: 10px; font-size: 14px; background: #fff; color: #1a1814;
   margin-bottom: 10px; font-family: inherit;
 }
 input:focus, select:focus, textarea:focus { outline: 2px solid #BA7517; outline-offset: -2px; }
-label {
-  display: block; font-size: 12px; font-weight: 600; color: #4a4845;
-  margin-bottom: 5px; margin-top: 8px;
-}
+label { display: block; font-size: 12px; font-weight: 600; color: #4a4845; margin-bottom: 5px; margin-top: 8px; }
 .row { display: flex; gap: 10px; }
 .row > * { flex: 1; }
+h1, h2, h3 { font-weight: 700; }
 h2 { font-size: 18px; margin-bottom: 14px; }
 h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
 .alert {
@@ -72,57 +98,446 @@ h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
 .alert-info { background: #FAEEDA; color: #633806; border-left: 3px solid #BA7517; }
 .statut-badge {
   display: inline-block; padding: 3px 8px; border-radius: 8px;
-  font-size: 10px; font-weight: 600;
+  font-size: 10px; font-weight: 600; vertical-align: middle;
 }
 .statut-disponible { background: #EAF3DE; color: #27500A; }
 .statut-en_cours { background: #FAEEDA; color: #633806; }
 .statut-indisponible { background: #FCEBEB; color: #791F1F; }
 .statut-en_attente { background: #E6F1FB; color: #0C447C; }
-.annonce-card { cursor: pointer; transition: transform 0.1s; }
-.annonce-card:hover { transform: translateY(-1px); border-color: #BA7517; }
-.annonce-prix { font-size: 18px; font-weight: 700; color: #BA7517; margin: 6px 0; }
-.annonce-meta { font-size: 11px; color: #6b6560; }
+
+/* ===== ANNONCES ===== */
+.filtres-bar {
+  background: #fff; border-bottom: 0.5px solid #e8e4dc; padding: 10px 14px;
+  position: sticky; top: 49px; z-index: 40;
+}
+.filtres-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.filtres-scroll::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0; padding: 6px 12px; border-radius: 18px; font-size: 12px;
+  background: #F1EFE8; color: #4a4845; border: 0.5px solid #D3D1C7;
+  cursor: pointer; white-space: nowrap; font-weight: 500;
+}
+.chip.active { background: #BA7517; color: #fff; border-color: #BA7517; }
+.compteur {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; font-size: 12px; color: #6b6560;
+}
+.annonces-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 14px;
+}
+.annonce-mini {
+  background: #fff; border-radius: 12px; overflow: hidden; cursor: pointer;
+  border: 0.5px solid #e8e4dc; transition: 0.15s;
+}
+.annonce-mini:hover { transform: translateY(-2px); border-color: #BA7517; }
+.annonce-mini-strip {
+  height: 60px; background: linear-gradient(135deg, #FAEEDA, #F0C97A);
+  display: flex; align-items: center; justify-content: center; position: relative;
+  background-size: cover; background-position: center;
+}
+.annonce-mini-strip.has-photo { background: #f5f5f0; }
+.annonce-mini-strip img { width: 100%; height: 100%; object-fit: cover; }
+.annonce-mini-icon {
+  width: 32px; height: 32px; border-radius: 50%; background: #633806;
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.annonce-mini-verifie {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(225,245,238,0.95); color: #085041;
+  font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: 600;
+}
+.annonce-mini-body { padding: 8px; }
+.annonce-mini-prix { font-size: 14px; font-weight: 700; color: #1a1814; margin-bottom: 2px; }
+.annonce-mini-prix .unit { font-size: 9px; color: #6b6560; font-weight: 400; }
+.annonce-mini-lieu { font-size: 10px; color: #6b6560; }
+.annonce-mini-cat {
+  display: inline-block; background: #FAEEDA; color: #633806;
+  padding: 2px 5px; border-radius: 4px; font-size: 9px; font-weight: 600; margin-bottom: 4px;
+}
+
+/* ===== DÉTAIL ANNONCE ===== */
+.detail-hero {
+  height: 180px; background: linear-gradient(135deg, #FAEEDA, #F0C97A);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; background-size: cover; background-position: center;
+}
+.detail-hero.has-photos { background: #000; }
+.detail-photos-carousel {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+  height: 100%; width: 100%; -webkit-overflow-scrolling: touch;
+}
+.detail-photos-carousel::-webkit-scrollbar { display: none; }
+.detail-photo {
+  flex: 0 0 100%; height: 180px; scroll-snap-align: start;
+  background-size: cover; background-position: center;
+}
+.btn-back {
+  position: absolute; top: 14px; left: 14px;
+  background: rgba(255,255,255,0.9); border-radius: 50%; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 18px; color: #1a1814; z-index: 5;
+}
+.btn-share {
+  position: absolute; top: 14px; right: 14px;
+  background: rgba(255,255,255,0.9); border-radius: 50%; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 16px; z-index: 5;
+}
+.detail-icon-large {
+  width: 64px; height: 64px; border-radius: 50%; background: #633806;
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+}
+.detail-body { padding: 16px; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+.detail-titre { font-size: 18px; font-weight: 700; }
+.detail-prix { font-size: 26px; font-weight: 700; color: #BA7517; margin-bottom: 4px; }
+.detail-prix .unit { font-size: 13px; color: #6b6560; font-weight: 400; }
+.detail-lieu { font-size: 13px; color: #6b6560; margin-bottom: 12px; }
+.kpis-detail {
+  display: flex; background: #fff; border-radius: 12px; padding: 14px;
+  margin-bottom: 14px; border: 0.5px solid #e8e4dc;
+}
+.kpi { flex: 1; text-align: center; }
+.kpi-val { font-size: 16px; font-weight: 700; }
+.kpi-lbl { font-size: 10px; color: #6b6560; }
+.kpi-divider { width: 0.5px; background: #e8e4dc; margin: 0 8px; }
+.equip-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.equip-chip {
+  display: flex; align-items: center; gap: 5px;
+  background: #fff; padding: 6px 10px; border-radius: 8px;
+  border: 0.5px solid #e8e4dc; font-size: 12px; color: #4a4845;
+}
+.proprio-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; padding: 12px; border-radius: 12px;
+  border: 0.5px solid #e8e4dc;
+}
+.proprio-avatar {
+  width: 42px; height: 42px; border-radius: 50%; background: #EAF3DE;
+  color: #3B6D11; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
+}
+.proprio-info { flex: 1; }
+.proprio-nom { font-size: 13px; font-weight: 700; }
+.proprio-meta { font-size: 11px; color: #6b6560; }
+.warn-box {
+  background: #FEF3CD; border: 0.5px solid #F0C97A; border-radius: 10px;
+  padding: 12px; font-size: 11px; color: #633806; text-align: center;
+  margin: 12px 0;
+}
+.detail-footer {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; background: #fff;
+  border-top: 0.5px solid #e8e4dc; padding: 12px 14px;
+  display: flex; gap: 10px; z-index: 60;
+}
+.detail-footer .btn { flex: 1; }
+.btn-favori {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: #F1EFE8; border: 0.5px solid #e8e4dc;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; cursor: pointer; flex-shrink: 0;
+}
+.btn-favori.actif { background: #FCEBEB; }
+
+/* ===== CHAT ===== */
+.conv-list .conv {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; padding: 12px; border-bottom: 0.5px solid #e8e4dc;
+  cursor: pointer;
+}
+.conv:hover { background: #fdfaf5; }
+.conv-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #EAF3DE; color: #3B6D11;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.conv-info { flex: 1; min-width: 0; }
+.conv-row1 { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.conv-nom { font-size: 13px; font-weight: 600; }
+.conv-nom.gras { font-weight: 800; }
+.conv-date { font-size: 10px; color: #B4B2A9; }
+.conv-annonce { font-size: 11px; color: #BA7517; font-weight: 500; }
+.conv-msg { font-size: 12px; color: #888780; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-msg.gras { color: #1a1814; font-weight: 600; }
+.conv-badge {
+  width: 20px; height: 20px; border-radius: 10px;
+  background: #BA7517; color: #fff; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* Vue conversation */
+#screen-conversation { padding: 0; display: none; }
+#screen-conversation.active { display: flex; flex-direction: column; height: calc(100vh - 49px); }
+.conv-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: #fff; border-bottom: 0.5px solid #e8e4dc;
+}
+.conv-back { font-size: 22px; cursor: pointer; }
+.conv-header-info { flex: 1; }
+.conv-header-nom { font-size: 14px; font-weight: 700; }
+.conv-header-annonce { font-size: 11px; color: #6b6560; }
+.conv-warn {
+  background: #FAEEDA; padding: 6px 14px; font-size: 10px;
+  color: #633806; text-align: center;
+}
+.conv-messages { flex: 1; overflow-y: auto; padding: 14px; background: #fafaf7; }
+.msg-wrap { margin-bottom: 8px; max-width: 78%; }
+.msg-wrap.moi { margin-left: auto; }
+.msg-bubble { padding: 9px 12px; border-radius: 14px; word-wrap: break-word; }
+.msg-wrap.moi .msg-bubble { background: #BA7517; color: #fff; border-bottom-right-radius: 4px; }
+.msg-wrap.eux .msg-bubble { background: #fff; color: #1a1814; border-bottom-left-radius: 4px; border: 0.5px solid #e8e4dc; }
+.msg-heure { font-size: 10px; color: #B4B2A9; margin-top: 3px; }
+.msg-wrap.moi .msg-heure { text-align: right; }
+.conv-input {
+  display: flex; gap: 8px; padding: 10px 12px;
+  background: #fff; border-top: 0.5px solid #e8e4dc; align-items: flex-end;
+}
+.conv-input input {
+  flex: 1; margin-bottom: 0; background: #F1EFE8; border: 0;
+  border-radius: 18px; padding: 10px 14px;
+}
+.conv-send {
+  width: 38px; height: 38px; border-radius: 19px; background: #BA7517;
+  color: #fff; border: 0; cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.conv-send:disabled { background: #D3D1C7; }
+.frappe-bubble {
+  display: inline-block; padding: 10px 14px; border-radius: 14px;
+  background: #fff; border: 0.5px solid #e8e4dc; color: #B4B2A9;
+  border-bottom-left-radius: 4px; font-size: 14px;
+}
+
+/* ===== CARTE ===== */
+#carte-container {
+  height: calc(100vh - 49px - 60px);
+  position: relative;
+}
+#map { width: 100%; height: 100%; }
+.carte-villes {
+  position: absolute; top: 12px; left: 12px; right: 12px; z-index: 1000;
+  display: flex; gap: 6px; overflow-x: auto; padding: 0;
+}
+.carte-villes::-webkit-scrollbar { display: none; }
+.carte-ville-chip {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 18px;
+  background: #fff; color: #4a4845; font-size: 12px; font-weight: 500;
+  cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.carte-ville-chip.active { background: #BA7517; color: #fff; }
+.carte-fiche {
+  position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 1000;
+  background: #fff; border-radius: 14px; padding: 14px;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.12); display: none;
+}
+.carte-fiche.active { display: block; }
+.carte-fiche-close {
+  position: absolute; top: 10px; right: 10px;
+  width: 24px; height: 24px; border-radius: 50%; background: #F1EFE8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; cursor: pointer;
+}
+.carte-marker {
+  background: #fff; padding: 4px 7px; border-radius: 8px;
+  font-size: 11px; font-weight: 700; border: 1.5px solid;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  white-space: nowrap;
+}
+
+/* ===== PUBLIER ===== */
+.uploader {
+  border: 1.5px dashed #D3D1C7; border-radius: 12px;
+  padding: 24px; text-align: center; cursor: pointer;
+  margin-bottom: 12px; background: #fdfaf5;
+}
+.uploader:hover { border-color: #BA7517; }
+.uploader-emoji { font-size: 32px; margin-bottom: 6px; }
+.photos-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.photo-preview {
+  width: 80px; height: 80px; border-radius: 8px; background-size: cover;
+  position: relative; background-color: #f5f5f0;
+}
+.photo-preview .remove {
+  position: absolute; top: -5px; right: -5px;
+  width: 20px; height: 20px; border-radius: 50%; background: #791F1F;
+  color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; line-height: 1;
+}
+
+/* ===== PAIEMENT ===== */
+.plan-card {
+  position: relative; background: #fff; border-radius: 14px; padding: 16px;
+  margin-bottom: 10px; border: 1px solid #e8e4dc; cursor: pointer;
+}
+.plan-card.actif { border: 2px solid #BA7517; }
+.plan-recommande {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: #BA7517; color: #fff; font-size: 9px; font-weight: 700;
+  padding: 2px 10px; border-radius: 10px;
+}
+.plan-row { display: flex; justify-content: space-between; align-items: center; }
+.plan-titre { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.plan-desc { font-size: 11px; color: #6b6560; }
+.plan-prix { font-size: 20px; font-weight: 700; text-align: right; }
+.plan-prix .unit { font-size: 10px; color: #6b6560; font-weight: 400; }
+.op-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; padding: 14px; border-radius: 12px;
+  border: 1px solid #e8e4dc; cursor: pointer; margin-bottom: 8px;
+}
+.op-card.actif { border: 2px solid #BA7517; }
+.op-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+.op-mtn { background: #FAEEDA; color: #633806; }
+.op-moov { background: #E6F1FB; color: #0C447C; }
+.op-celtiis { background: #EAF3DE; color: #27500A; }
+.op-info { flex: 1; }
+.op-nom { font-size: 14px; font-weight: 600; }
+.op-check { color: #BA7517; font-size: 16px; font-weight: 700; }
+.etape-bar { display: flex; gap: 4px; padding: 8px 14px; background: #fff; }
+.etape-seg { flex: 1; height: 3px; background: #e8e4dc; border-radius: 2px; }
+.etape-seg.actif { background: #BA7517; }
+
+/* ===== AVIS ===== */
+.note-stars { color: #BA7517; font-size: 14px; }
+.avis-card {
+  background: #fff; padding: 12px; border-radius: 10px;
+  margin-bottom: 8px; border: 0.5px solid #e8e4dc;
+}
+.avis-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.avis-auteur { font-size: 12px; font-weight: 700; }
+.avis-text { font-size: 12px; color: #4a4845; line-height: 1.5; }
+.avis-meta { font-size: 10px; color: #6b6560; margin-top: 4px; }
+.note-input { display: flex; gap: 4px; margin-bottom: 12px; }
+.note-input .star {
+  font-size: 28px; color: #D3D1C7; cursor: pointer; transition: 0.1s;
+}
+.note-input .star.actif { color: #BA7517; }
+
+/* ===== UTILS ===== */
 .empty {
   text-align: center; padding: 60px 20px; color: #6b6560;
 }
 .empty-emoji { font-size: 48px; margin-bottom: 12px; }
 .loading { text-align: center; padding: 30px; color: #6b6560; font-size: 13px; }
-.api-status {
-  font-size: 10px; padding: 3px 8px; border-radius: 6px;
-  background: #EAF3DE; color: #27500A;
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid #f3f3f3; border-top: 2px solid #BA7517; border-radius: 50%;
+  animation: spin 0.8s linear infinite; vertical-align: middle;
 }
-.api-status.error { background: #FCEBEB; color: #791F1F; }
-.section-divider { margin: 20px 0 10px; font-size: 11px; color: #888780; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
-.kvtable { font-size: 12px; line-height: 1.7; }
-.kvtable .key { color: #6b6560; display: inline-block; min-width: 100px; }
-.kvtable .val { color: #1a1814; font-weight: 500; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.section-title { font-size: 12px; font-weight: 700; color: #888780; text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; }
 .config-box {
-  background: #F1EFE8; padding: 10px; border-radius: 8px; font-size: 11px;
-  font-family: ui-monospace, monospace; word-break: break-all; margin-bottom: 14px;
+  background: #F1EFE8; padding: 8px 10px; border-radius: 8px; font-size: 10px;
+  font-family: ui-monospace, monospace; word-break: break-all; margin-bottom: 12px; color: #6b6560;
 }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 100;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.modal {
+  background: #fff; width: 100%; max-width: 480px;
+  border-radius: 18px 18px 0 0; padding: 20px 16px 30px;
+  max-height: 90vh; overflow-y: auto;
+  animation: slideUp 0.2s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.modal-close { font-size: 22px; cursor: pointer; }
 </style>
 </head>
 <body>
-<div class="container">
-  <!-- Header -->
+
+<div class="app">
+  <!-- HEADER -->
   <div class="header">
     <div class="logo"><span class="logo-or">Logis</span>BJ</div>
-    <div id="user-pill" class="user-pill" style="display:none;">Connecté</div>
-    <div id="api-status" class="api-status">API: vérification...</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div id="user-pill" class="user-pill" style="display:none;" onclick="showScreen('profil')"></div>
+      <div id="api-status" class="api-status">vérification...</div>
+    </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <div class="tab active" onclick="showScreen('connexion')">Connexion</div>
-    <div class="tab" onclick="showScreen('annonces')">Annonces</div>
-    <div class="tab" onclick="showScreen('publier')">Publier</div>
-    <div class="tab" onclick="showScreen('admin')">Admin</div>
+  <!-- ÉCRAN ANNONCES -->
+  <div id="screen-annonces" class="screen active" style="padding:0;">
+    <div class="filtres-bar">
+      <div class="filtres-scroll" id="filtres-villes"></div>
+      <div class="filtres-scroll" style="margin-top:6px;" id="filtres-categories"></div>
+    </div>
+    <div class="compteur">
+      <span id="compteur-text">Chargement...</span>
+      <button class="btn btn-sm btn-secondary" onclick="chargerAnnonces()">↻ Actualiser</button>
+    </div>
+    <div id="annonces-list">
+      <div class="loading"><span class="spinner"></span> Chargement...</div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN CARTE -->
+  <div id="screen-carte" class="screen" style="padding:0;">
+    <div id="carte-container">
+      <div class="carte-villes" id="carte-villes-bar"></div>
+      <div id="map"></div>
+      <div id="carte-fiche" class="carte-fiche">
+        <div class="carte-fiche-close" onclick="document.getElementById('carte-fiche').classList.remove('active')">✕</div>
+        <div id="carte-fiche-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN MESSAGES -->
+  <div id="screen-messages" class="screen" style="padding:0;">
+    <div style="padding:14px 14px 8px;">
+      <h2 style="margin:0;">Messages</h2>
+    </div>
+    <div id="conv-list" class="conv-list">
+      <div class="loading">Chargement...</div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN CONVERSATION -->
+  <div id="screen-conversation">
+    <div class="conv-header">
+      <div class="conv-back" onclick="fermerConversation()">←</div>
+      <div class="conv-header-info">
+        <div class="conv-header-nom" id="conv-nom">—</div>
+        <div class="conv-header-annonce" id="conv-annonce">—</div>
+      </div>
+    </div>
+    <div class="conv-warn">⚠️ Ne versez aucun acompte avant la visite</div>
+    <div class="conv-messages" id="conv-messages"></div>
+    <div class="conv-input">
+      <input type="text" id="conv-input-text" placeholder="Écrivez votre message..." onkeypress="if(event.key==='Enter') envoyerMsg()">
+      <button class="conv-send" onclick="envoyerMsg()" id="conv-send-btn">➤</button>
+    </div>
+  </div>
+
+  <!-- ÉCRAN PUBLIER -->
+  <div id="screen-publier" class="screen">
+    <h2>Publier une annonce</h2>
+    <div id="publier-content"></div>
+  </div>
+
+  <!-- ÉCRAN PROFIL -->
+  <div id="screen-profil" class="screen">
+    <h2>Mon compte</h2>
+    <div id="profil-content"></div>
   </div>
 
   <!-- ÉCRAN CONNEXION -->
-  <div id="screen-connexion" class="screen active">
-    <h2>Connexion / Inscription</h2>
-    <div class="config-box">API : <strong id="api-url"></strong></div>
+  <div id="screen-connexion" class="screen">
+    <h2>Connexion</h2>
+    <div class="config-box">API : <span id="api-url"></span></div>
     
     <div class="card">
       <h3>Se connecter</h3>
@@ -158,130 +573,189 @@ h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
       </select>
       <label>Ville</label>
       <select id="reg-ville">
-        <option>Cotonou</option>
-        <option>Porto-Novo</option>
-        <option>Parakou</option>
-        <option>Abomey-Calavi</option>
-        <option>Bohicon</option>
+        <option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option>
+        <option>Abomey-Calavi</option><option>Bohicon</option>
       </select>
       <button class="btn btn-secondary" onclick="sInscrire()">S'inscrire</button>
       <div id="reg-msg"></div>
     </div>
-
-    <div id="user-info" style="display:none;" class="card">
-      <h3>Mon compte</h3>
-      <div id="user-details" class="kvtable"></div>
-      <button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:14px;">Se déconnecter</button>
-    </div>
   </div>
 
-  <!-- ÉCRAN ANNONCES -->
-  <div id="screen-annonces" class="screen">
-    <h2>Annonces vérifiées</h2>
-    <button class="btn btn-secondary" onclick="chargerAnnonces()" style="margin-bottom:14px;">Actualiser</button>
-    <div id="annonces-list">
-      <div class="loading">Chargement...</div>
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="tab active" data-screen="annonces" onclick="showScreen('annonces')">
+      <div class="ico">🏠</div><div class="lbl">Annonces</div>
+    </div>
+    <div class="tab" data-screen="carte" onclick="showScreen('carte')">
+      <div class="ico">🗺️</div><div class="lbl">Carte</div>
+    </div>
+    <div class="tab" data-screen="publier" onclick="showScreen('publier')">
+      <div class="ico">+</div><div class="lbl">Publier</div>
+    </div>
+    <div class="tab" data-screen="messages" onclick="showScreen('messages')">
+      <div class="ico">💬</div><div class="lbl">Messages</div>
+      <div class="pill" id="badge-messages" style="display:none;"></div>
+    </div>
+    <div class="tab" data-screen="profil" onclick="showScreen('profil')">
+      <div class="ico">👤</div><div class="lbl">Compte</div>
     </div>
   </div>
+</div>
 
-  <!-- ÉCRAN PUBLIER -->
-  <div id="screen-publier" class="screen">
-    <h2>Publier une annonce</h2>
-    <div id="publier-content">
-      <div class="alert alert-info">Connectez-vous pour publier une annonce.</div>
+<!-- MODAL PAIEMENT -->
+<div id="modal-paiement" class="modal-overlay" style="display:none;" onclick="if(event.target===this) fermerModal('modal-paiement')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="paiement-titre">Souscrire un abonnement</h2>
+      <div class="modal-close" onclick="fermerModal('modal-paiement')">✕</div>
     </div>
+    <div class="etape-bar">
+      <div class="etape-seg actif" id="seg-1"></div>
+      <div class="etape-seg" id="seg-2"></div>
+      <div class="etape-seg" id="seg-3"></div>
+    </div>
+    <div id="paiement-content"></div>
   </div>
+</div>
 
-  <!-- ÉCRAN ADMIN -->
-  <div id="screen-admin" class="screen">
-    <h2>Tableau de bord admin</h2>
-    <div id="admin-content">
-      <div class="alert alert-info">Connectez-vous en tant qu'admin pour accéder.</div>
-    </div>
+<!-- MODAL DÉTAIL ANNONCE -->
+<div id="modal-detail" class="modal-overlay" style="display:none;" onclick="if(event.target===this) fermerModal('modal-detail')">
+  <div class="modal" style="padding:0;">
+    <div id="detail-content"></div>
   </div>
 </div>
 
 <script>
 // ============================================
-// Configuration
+// CONFIG
 // ============================================
 const API_URL = 'https://logisbj-backend.onrender.com/api';
+const API_BASE = 'https://logisbj-backend.onrender.com';
 document.getElementById('api-url').textContent = API_URL;
 
 let token = localStorage.getItem('logisbj_token');
 let currentUser = JSON.parse(localStorage.getItem('logisbj_user') || 'null');
+let socket = null;
+let currentConvId = null;
+let currentScreen = 'annonces';
+let etapePaiement = 1;
+let planChoisi = 'proprietaire';
+let opChoisi = 'mtn';
+let categories = [];
+let filtres = { ville: '', categorie: '' };
+let map = null;
+let markersLayer = null;
 
 // ============================================
-// Vérifier que l'API répond
+// CONSTANTES
 // ============================================
-async function pingAPI() {
-  try {
-    const res = await fetch(API_URL.replace('/api', '/health'));
-    const data = await res.json();
-    document.getElementById('api-status').textContent = 'API: ' + data.status;
-    document.getElementById('api-status').className = 'api-status';
-  } catch {
-    document.getElementById('api-status').textContent = 'API: hors ligne';
-    document.getElementById('api-status').className = 'api-status error';
-  }
-}
-pingAPI();
+const VILLES = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon'];
+const VILLES_COORDS = {
+  'Cotonou':       { lat: 6.3703, lng: 2.3912, zoom: 12 },
+  'Porto-Novo':    { lat: 6.4969, lng: 2.6289, zoom: 12 },
+  'Parakou':       { lat: 9.3370, lng: 2.6283, zoom: 12 },
+  'Abomey-Calavi': { lat: 6.4500, lng: 2.3557, zoom: 12 },
+  'Bohicon':       { lat: 7.1810, lng: 2.0665, zoom: 12 },
+};
+const STATUT_COULEURS = {
+  disponible: '#3B6D11',
+  en_cours: '#854F0B',
+  indisponible: '#791F1F',
+  en_attente: '#0C447C',
+};
+const PLANS = {
+  chercheur:    { label: 'Chercheur',    montant: 2000,  desc: 'Étudiants & salariés' },
+  proprietaire: { label: 'Propriétaire', montant: 5000,  desc: 'Bailleurs & commerçants', recommande: true },
+  agence_pro:   { label: 'Agence Pro',   montant: 15000, desc: 'Agences immobilières' },
+};
+const OPS = {
+  mtn:     { label: 'MTN Mobile Money', short: 'MTN', class: 'op-mtn' },
+  moov:    { label: 'Moov Money',        short: 'MV',  class: 'op-moov' },
+  celtiis: { label: 'Celtiis Bénin',     short: 'CB',  class: 'op-celtiis' },
+};
+const EQUIP_LABELS = {
+  eau: '💧 Eau', electricite: '⚡ Électricité', wc_prive: '🚿 WC privatif',
+  cuisine: '🍳 Cuisine', climatisation: '❄️ Clim', gardien: '🔐 Gardien',
+  parking: '🅿️ Parking', internet: '📶 Internet'
+};
 
 // ============================================
-// Navigation
+// API HELPERS
 // ============================================
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('screen-' + name).classList.add('active');
-  document.querySelectorAll('.tab').forEach(t => {
-    if (t.textContent.toLowerCase().includes(name.replace('connexion', 'connexion'))) t.classList.add('active');
-  });
-  if (name === 'annonces') chargerAnnonces();
-  if (name === 'publier') majPublier();
-  if (name === 'admin') majAdmin();
-}
-
-// ============================================
-// API helpers
-// ============================================
-async function api(path, method = 'GET', body) {
-  const headers = { 'Content-Type': 'application/json' };
+async function api(path, method = 'GET', body, isFormData = false) {
+  const headers = {};
+  if (!isFormData) headers['Content-Type'] = 'application/json';
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(API_URL + path, {
     method, headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Erreur réseau');
   return data;
 }
 
+async function pingAPI() {
+  try {
+    const res = await fetch(API_BASE + '/health');
+    const data = await res.json();
+    document.getElementById('api-status').textContent = data.status;
+    document.getElementById('api-status').className = 'api-status';
+  } catch {
+    document.getElementById('api-status').textContent = 'hors ligne';
+    document.getElementById('api-status').className = 'api-status error';
+  }
+}
+
 function showMsg(id, msg, type = 'success') {
   const el = document.getElementById(id);
-  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-  setTimeout(() => { el.innerHTML = ''; }, 6000);
+  if (!el) return;
+  el.innerHTML = '<div class="alert alert-' + type + '">' + msg + '</div>';
+  setTimeout(() => { if (el) el.innerHTML = ''; }, 6000);
 }
 
 // ============================================
-// Connexion / Inscription
+// NAVIGATION
+// ============================================
+function showScreen(name) {
+  // Si écran nécessite auth
+  if (['publier', 'messages', 'profil'].includes(name) && !currentUser) {
+    showScreen('connexion');
+    return;
+  }
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav .tab').forEach(t => t.classList.remove('active'));
+  const screen = document.getElementById('screen-' + name);
+  if (screen) screen.classList.add('active');
+  const tab = document.querySelector('.bottom-nav .tab[data-screen="' + name + '"]');
+  if (tab) tab.classList.add('active');
+  currentScreen = name;
+  
+  if (name === 'annonces') chargerAnnonces();
+  if (name === 'carte') initCarte();
+  if (name === 'messages') chargerConversations();
+  if (name === 'publier') majPublier();
+  if (name === 'profil') majProfil();
+}
+
+// ============================================
+// AUTH
 // ============================================
 async function seConnecter() {
   const tel = document.getElementById('login-tel').value.trim();
   const pwd = document.getElementById('login-pwd').value;
   if (!tel || !pwd) return showMsg('login-msg', 'Téléphone et mot de passe requis', 'error');
-  
   try {
-    const data = await api('/auth/connexion', 'POST', {
-      telephone: tel, mot_de_passe: pwd,
-    });
+    const data = await api('/auth/connexion', 'POST', { telephone: tel, mot_de_passe: pwd });
     token = data.token;
     currentUser = data.user;
     localStorage.setItem('logisbj_token', token);
     localStorage.setItem('logisbj_refresh', data.refreshToken);
     localStorage.setItem('logisbj_user', JSON.stringify(currentUser));
-    showMsg('login-msg', 'Connecté avec succès ! Bienvenue ' + currentUser.prenom + '.');
+    showMsg('login-msg', 'Connecté ! Bienvenue ' + currentUser.prenom);
     majUI();
+    initSocket();
+    setTimeout(() => showScreen('annonces'), 800);
   } catch (err) {
     showMsg('login-msg', err.message, 'error');
   }
@@ -300,95 +774,435 @@ async function sInscrire() {
     return showMsg('reg-msg', 'Remplissez tous les champs', 'error');
   }
   try {
-    const res = await api('/auth/inscription', 'POST', data);
-    showMsg('reg-msg', 'Compte créé ! ID : ' + res.userId.slice(0,8) + '...');
+    await api('/auth/inscription', 'POST', data);
+    showMsg('reg-msg', 'Compte créé ! Connectez-vous maintenant');
   } catch (err) {
     showMsg('reg-msg', err.message, 'error');
   }
 }
 
 function seDeconnecter() {
-  token = null;
-  currentUser = null;
+  token = null; currentUser = null;
   localStorage.removeItem('logisbj_token');
   localStorage.removeItem('logisbj_refresh');
   localStorage.removeItem('logisbj_user');
+  if (socket) { socket.disconnect(); socket = null; }
   majUI();
-  showScreen('connexion');
+  showScreen('annonces');
 }
 
-// ============================================
-// Mise à jour UI
-// ============================================
 function majUI() {
   const pill = document.getElementById('user-pill');
-  const info = document.getElementById('user-info');
-  
   if (currentUser) {
-    pill.style.display = 'block';
-    pill.textContent = currentUser.prenom + ' (' + currentUser.role + ')';
-    info.style.display = 'block';
-    document.getElementById('user-details').innerHTML = `
-      <div><span class="key">ID</span><span class="val">${currentUser.id.slice(0,8)}...</span></div>
-      <div><span class="key">Nom</span><span class="val">${currentUser.prenom} ${currentUser.nom}</span></div>
-      <div><span class="key">Téléphone</span><span class="val">${currentUser.telephone}</span></div>
-      <div><span class="key">Rôle</span><span class="val">${currentUser.role}</span></div>
-      <div><span class="key">Abonnement</span><span class="val">${currentUser.abonnement || 'gratuit'}</span></div>
-      <div><span class="key">Vérifié</span><span class="val">${currentUser.tel_verifie ? '✓ Oui' : '✗ Non'}</span></div>
-    `;
+    pill.style.display = 'flex';
+    pill.innerHTML = currentUser.prenom + ' (' + currentUser.role + ')';
   } else {
     pill.style.display = 'none';
-    info.style.display = 'none';
   }
 }
 
 // ============================================
-// Annonces
+// SOCKET.IO
 // ============================================
+function initSocket() {
+  if (!token) return;
+  socket = io(API_BASE, { auth: { token }, transports: ['websocket', 'polling'] });
+  socket.on('connect', () => {
+    console.log('Socket connecté');
+    socket.emit('rejoindre:conversations');
+  });
+  socket.on('message:recu', (msg) => {
+    if (currentConvId === msg.conversation_id) {
+      ajouterMsgUI(msg);
+      socket.emit('messages:lus', { conversation_id: msg.conversation_id });
+    } else {
+      // Notification
+      majBadgeMessages();
+    }
+  });
+}
+
+// ============================================
+// FILTRES & ANNONCES
+// ============================================
+function renderFiltres() {
+  // Villes
+  const villesBar = document.getElementById('filtres-villes');
+  villesBar.innerHTML = '<div class="chip ' + (filtres.ville === '' ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'\')">Toutes villes</div>' +
+    VILLES.map(v => '<div class="chip ' + (filtres.ville === v ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'' + v + '\')">' + v + '</div>').join('');
+  
+  // Catégories
+  const catsBar = document.getElementById('filtres-categories');
+  catsBar.innerHTML = '<div class="chip ' + (filtres.categorie === '' ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'\')">Toutes catégories</div>' +
+    categories.map(c => '<div class="chip ' + (filtres.categorie === c.id ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'' + c.id + '\')">' + c.nom + '</div>').join('');
+}
+
+function setFiltre(key, val) {
+  filtres[key] = val;
+  renderFiltres();
+  chargerAnnonces();
+}
+
+async function chargerCategories() {
+  try {
+    // Appel SQL via une route - pour l'instant on hardcode (la liste est stable)
+    categories = [
+      { id: 'studio', nom: 'Studio' },
+      { id: '1ch', nom: '1Ch/Salon' },
+      { id: '2ch', nom: '2Ch/Salon' },
+      { id: '3ch', nom: '3Ch/Salon' },
+      { id: 'appartement', nom: 'Appartement' },
+      { id: 'boutique', nom: 'Boutique' },
+      { id: 'atelier', nom: 'Atelier' },
+    ];
+  } catch (err) { console.error(err); }
+}
+
 async function chargerAnnonces() {
   const list = document.getElementById('annonces-list');
-  list.innerHTML = '<div class="loading">Chargement...</div>';
+  const compteur = document.getElementById('compteur-text');
+  list.innerHTML = '<div class="loading"><span class="spinner"></span> Chargement...</div>';
   try {
-    const data = await api('/annonces');
+    const params = new URLSearchParams();
+    if (filtres.ville) params.append('ville', filtres.ville);
+    const data = await api('/annonces?' + params.toString());
+    
+    compteur.textContent = data.pagination.total + ' offre' + (data.pagination.total > 1 ? 's' : '') + ' vérifiée' + (data.pagination.total > 1 ? 's' : '');
+    
     if (data.annonces.length === 0) {
-      list.innerHTML = `
-        <div class="empty">
-          <div class="empty-emoji">📦</div>
-          <div style="font-weight:600;margin-bottom:6px;">Aucune annonce vérifiée pour le moment</div>
-          <div style="font-size:12px;">Soyez le premier à publier une annonce !</div>
-        </div>`;
+      list.innerHTML = '<div class="empty"><div class="empty-emoji">📦</div><div style="font-weight:600;margin-bottom:6px;">Aucune annonce vérifiée</div><div style="font-size:12px;">Soyez le premier à publier !</div></div>';
       return;
     }
-    list.innerHTML = data.annonces.map(a => `
-      <div class="card annonce-card">
-        <div style="display:flex;justify-content:space-between;align-items:start;">
-          <div style="font-weight:600;font-size:14px;">${a.titre || a.categorie}</div>
-          <span class="statut-badge statut-${a.statut}">${a.statut}</span>
-        </div>
-        <div class="annonce-prix">${a.prix.toLocaleString()} FCFA<span style="font-size:11px;font-weight:400;color:#6b6560;"> /mois</span></div>
-        <div class="annonce-meta">
-          📍 ${a.quartier}, ${a.ville}<br>
-          🏠 ${a.categorie} · ${a.superficie ? a.superficie + ' m²' : ''}
-        </div>
-      </div>
-    `).join('');
-    list.innerHTML += `<div style="text-align:center;font-size:11px;color:#6b6560;padding:14px;">Total : ${data.pagination.total} annonce(s)</div>`;
+    
+    list.innerHTML = '<div class="annonces-grid">' + data.annonces.map(a => {
+      const photo = (a.photos && a.photos.length > 0) ? a.photos[0] : null;
+      const ico = a.icone || a.categorie?.charAt(0)?.toUpperCase() || '?';
+      return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
+        '<div class="annonce-mini-strip ' + (photo ? 'has-photo' : '') + '"' + (photo ? ' style="background-image:url(' + photo + ')"' : '') + '>' +
+          (photo ? '' : '<div class="annonce-mini-icon">' + ico + '</div>') +
+          (a.verifie ? '<div class="annonce-mini-verifie">✓ Vérifié</div>' : '') +
+        '</div>' +
+        '<div class="annonce-mini-body">' +
+          '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+          '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
+          '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
+          (a.note_moyenne > 0 ? '<div style="font-size:10px;color:#BA7517;margin-top:3px;">★ ' + a.note_moyenne + ' (' + a.nb_avis + ')</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('') + '</div>';
   } catch (err) {
-    list.innerHTML = `<div class="alert alert-error">Erreur : ${err.message}</div>`;
+    list.innerHTML = '<div class="alert alert-error">' + err.message + '</div>';
   }
 }
 
 // ============================================
-// Publier
+// DÉTAIL ANNONCE
+// ============================================
+async function ouvrirDetail(id) {
+  document.getElementById('modal-detail').style.display = 'flex';
+  const c = document.getElementById('detail-content');
+  c.innerHTML = '<div class="loading"><span class="spinner"></span> Chargement...</div>';
+  try {
+    const data = await api('/annonces/' + id);
+    const a = data.annonce;
+    const avis = data.avis || [];
+    
+    const photos = a.photos || [];
+    const equips = a.equipements ? Object.keys(a.equipements).filter(k => a.equipements[k]) : [];
+    
+    let heroHTML = '';
+    if (photos.length > 0) {
+      heroHTML = '<div class="detail-hero has-photos"><div class="detail-photos-carousel">' +
+        photos.map(p => '<div class="detail-photo" style="background-image:url(' + p + ')"></div>').join('') +
+        '</div>';
+    } else {
+      heroHTML = '<div class="detail-hero"><div class="detail-icon-large">' + (a.categorie?.charAt(0) || '?') + '</div>';
+    }
+    
+    c.innerHTML = heroHTML +
+      '<div class="btn-back" onclick="fermerModal(\'modal-detail\')">←</div>' +
+      '<div class="btn-share" onclick="partagerAnnonce(\'' + a.id + '\')">↗</div>' +
+      '</div>' +
+      '<div class="detail-body" style="padding-bottom:90px;">' +
+        '<div class="detail-row">' +
+          '<div style="font-size:14px;font-weight:600;">' + a.categorie + '</div>' +
+          '<div class="statut-badge statut-' + a.statut + '">' + a.statut + '</div>' +
+        '</div>' +
+        '<div class="detail-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
+        '<div class="detail-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
+        (a.titre ? '<div style="font-weight:600;margin-bottom:8px;">' + a.titre + '</div>' : '') +
+        '<div class="kpis-detail">' +
+          '<div class="kpi"><div class="kpi-val">' + (a.superficie || '—') + (a.superficie ? ' m²' : '') + '</div><div class="kpi-lbl">Superficie</div></div>' +
+          '<div class="kpi-divider"></div>' +
+          '<div class="kpi"><div class="kpi-val">' + (a.superficie ? Math.round(a.prix / a.superficie).toLocaleString() : '—') + '</div><div class="kpi-lbl">FCFA/m²</div></div>' +
+          '<div class="kpi-divider"></div>' +
+          '<div class="kpi"><div class="kpi-val" style="color:#BA7517;">' + (a.note_moyenne > 0 ? '★ ' + a.note_moyenne : '—') + '</div><div class="kpi-lbl">' + (a.nb_avis || 0) + ' avis</div></div>' +
+        '</div>' +
+        (a.verifie ? '<div class="alert alert-success">✓ Offre vérifiée par LogisBJ — Documents contrôlés</div>' : '') +
+        (a.description ? '<div class="section-title">Description</div><div style="font-size:13px;color:#4a4845;line-height:1.6;">' + a.description + '</div>' : '') +
+        (equips.length > 0 ? '<div class="section-title">Équipements</div><div class="equip-grid">' +
+          equips.map(e => '<div class="equip-chip">' + (EQUIP_LABELS[e] || e) + '</div>').join('') +
+        '</div>' : '') +
+        '<div class="section-title">Propriétaire</div>' +
+        '<div class="proprio-card">' +
+          '<div class="proprio-avatar">' + ((a.proprio_prenom?.[0] || '') + (a.proprio_nom?.[0] || '')).toUpperCase() + '</div>' +
+          '<div class="proprio-info">' +
+            '<div class="proprio-nom">' + a.proprio_prenom + ' ' + (a.proprio_nom?.charAt(0) || '') + '.</div>' +
+            '<div class="proprio-meta">Note ' + (a.score_confiance || '—') + ' · ' + (a.taux_reponse || 0) + '% de réponse</div>' +
+          '</div>' +
+          '<div class="statut-badge statut-disponible">✓ ID</div>' +
+        '</div>' +
+        (avis.length > 0 ? '<div class="section-title">Avis récents</div>' +
+          avis.map(av => '<div class="avis-card">' +
+            '<div class="avis-header"><div class="avis-auteur">' + (av.anonyme ? 'Anonyme' : av.auteur) + '</div>' +
+            '<div class="note-stars">' + '★'.repeat(av.note_globale) + '</div></div>' +
+            '<div class="avis-text">' + av.commentaire + '</div>' +
+          '</div>').join('') : '') +
+        '<div class="warn-box">⚠️ Ne versez aucun acompte avant la visite. LogisBJ ne collecte pas de caution.</div>' +
+      '</div>' +
+      '<div class="detail-footer" style="position:sticky;">' +
+        '<button class="btn-favori" onclick="this.classList.toggle(\'actif\'); this.textContent=this.classList.contains(\'actif\')?\'❤️\':\'🤍\'">🤍</button>' +
+        '<button class="btn" onclick="contacterProprio(\'' + a.id + '\', \'' + (a.proprio_prenom || '') + '\', \'' + (a.titre || a.categorie) + '\')" ' + (a.statut !== 'disponible' ? 'disabled' : '') + '>' +
+          (a.statut === 'disponible' ? 'Contacter le propriétaire' : 'Non disponible') +
+        '</button>' +
+      '</div>';
+  } catch (err) {
+    c.innerHTML = '<div style="padding:30px;"><div class="alert alert-error">' + err.message + '</div><button class="btn" onclick="fermerModal(\'modal-detail\')">Fermer</button></div>';
+  }
+}
+
+async function contacterProprio(annonceId, prenomProprio, titreAnnonce) {
+  if (!currentUser) {
+    fermerModal('modal-detail');
+    showScreen('connexion');
+    return;
+  }
+  if (!['chercheur', 'proprietaire', 'agence_pro'].includes(currentUser.abonnement)) {
+    if (!confirm('Abonnement requis pour contacter. Souscrire maintenant ?')) return;
+    fermerModal('modal-detail');
+    ouvrirPaiement();
+    return;
+  }
+  try {
+    const data = await api('/messages/conversations', 'POST', {
+      annonce_id: annonceId,
+      premier_message: 'Bonjour, je suis intéressé(e) par votre annonce.',
+    });
+    fermerModal('modal-detail');
+    ouvrirConversation(data.conversation_id, prenomProprio, titreAnnonce);
+  } catch (err) {
+    alert('Erreur : ' + err.message);
+  }
+}
+
+function partagerAnnonce(id) {
+  const url = window.location.origin + '/?annonce=' + id;
+  if (navigator.share) {
+    navigator.share({ title: 'LogisBJ', url: url });
+  } else {
+    navigator.clipboard.writeText(url).then(() => alert('Lien copié !'));
+  }
+}
+
+// ============================================
+// CARTE
+// ============================================
+function initCarte() {
+  if (map) return;
+  setTimeout(() => {
+    map = L.map('map').setView([6.3703, 2.3912], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19
+    }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+    
+    // Villes bar
+    const bar = document.getElementById('carte-villes-bar');
+    bar.innerHTML = VILLES.map((v, i) => 
+      '<div class="carte-ville-chip ' + (i === 0 ? 'active' : '') + '" onclick="centrerVille(\'' + v + '\', this)">' + v + '</div>'
+    ).join('');
+    
+    chargerMarqueurs();
+  }, 100);
+}
+
+function centrerVille(ville, el) {
+  document.querySelectorAll('.carte-ville-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const c = VILLES_COORDS[ville];
+  if (c && map) {
+    map.setView([c.lat, c.lng], c.zoom);
+    chargerMarqueurs(ville);
+  }
+}
+
+async function chargerMarqueurs(ville) {
+  if (!markersLayer) return;
+  markersLayer.clearLayers();
+  try {
+    const params = ville ? '?ville=' + ville : '';
+    const data = await api('/annonces' + params);
+    
+    // Annonces de démo si pas de coordonnées
+    const annoncesGeo = data.annonces.filter(a => a.latitude && a.longitude);
+    let listeAffichage = annoncesGeo.length > 0 ? annoncesGeo : [];
+    
+    // Si pas d'annonces géolocalisées, on en place fictivement autour de Cotonou avec leur ville
+    if (annoncesGeo.length === 0 && data.annonces.length > 0) {
+      const c = VILLES_COORDS['Cotonou'];
+      listeAffichage = data.annonces.map((a, i) => ({
+        ...a,
+        latitude: c.lat + (Math.random() - 0.5) * 0.04,
+        longitude: c.lng + (Math.random() - 0.5) * 0.04,
+      }));
+    }
+    
+    listeAffichage.forEach(a => {
+      const couleur = STATUT_COULEURS[a.statut] || '#BA7517';
+      const icon = L.divIcon({
+        className: '',
+        html: '<div class="carte-marker" style="border-color:' + couleur + ';color:' + couleur + ';">' + Math.round(a.prix/1000) + 'K</div>',
+        iconSize: [50, 22],
+        iconAnchor: [25, 11],
+      });
+      const marker = L.marker([a.latitude, a.longitude], { icon }).addTo(markersLayer);
+      marker.on('click', () => afficherFicheCarte(a));
+    });
+  } catch (err) { console.error(err); }
+}
+
+function afficherFicheCarte(a) {
+  const fiche = document.getElementById('carte-fiche');
+  document.getElementById('carte-fiche-content').innerHTML = 
+    '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
+      '<div style="font-weight:700;">' + a.categorie + '</div>' +
+      '<div class="statut-badge statut-' + a.statut + '">' + a.statut + '</div>' +
+    '</div>' +
+    '<div style="font-size:18px;font-weight:700;color:#BA7517;margin-bottom:4px;">' + a.prix.toLocaleString() + ' <span style="font-size:11px;font-weight:400;color:#6b6560;">FCFA/mois</span></div>' +
+    '<div style="font-size:12px;color:#6b6560;margin-bottom:10px;">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
+    '<button class="btn btn-sm" onclick="document.getElementById(\'carte-fiche\').classList.remove(\'active\'); ouvrirDetail(\'' + a.id + '\')">Voir l\'annonce →</button>';
+  fiche.classList.add('active');
+}
+
+// ============================================
+// MESSAGES
+// ============================================
+async function chargerConversations() {
+  const list = document.getElementById('conv-list');
+  list.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  try {
+    const data = await api('/messages/conversations');
+    if (data.conversations.length === 0) {
+      list.innerHTML = '<div class="empty"><div class="empty-emoji">💬</div><div style="font-weight:600;margin-bottom:6px;">Aucun message</div><div style="font-size:12px;">Contactez un propriétaire depuis une annonce</div></div>';
+      return;
+    }
+    list.innerHTML = data.conversations.map(c => 
+      '<div class="conv" onclick="ouvrirConversation(\'' + c.id + '\', \'' + c.interlocuteur + '\', \'' + (c.categorie + ' · ' + c.quartier) + '\')">' +
+        '<div class="conv-avatar">' + (c.initiales || '??') + '</div>' +
+        '<div class="conv-info">' +
+          '<div class="conv-row1">' +
+            '<div class="conv-nom ' + (c.non_lus > 0 ? 'gras' : '') + '">' + c.interlocuteur + '</div>' +
+            '<div class="conv-date">' + formatDate(c.dernier_msg_le) + '</div>' +
+          '</div>' +
+          '<div class="conv-annonce">' + c.categorie + ' · ' + c.quartier + '</div>' +
+          '<div class="conv-msg ' + (c.non_lus > 0 ? 'gras' : '') + '">' + (c.dernier_msg || 'Conversation démarrée') + '</div>' +
+        '</div>' +
+        (c.non_lus > 0 ? '<div class="conv-badge">' + c.non_lus + '</div>' : '') +
+      '</div>'
+    ).join('');
+    majBadgeMessages();
+  } catch (err) {
+    list.innerHTML = '<div class="alert alert-error">' + err.message + '</div>';
+  }
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) {
+    return date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+  }
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return 'Hier';
+  return date.getDate() + '/' + (date.getMonth() + 1);
+}
+
+async function majBadgeMessages() {
+  const badge = document.getElementById('badge-messages');
+  try {
+    const data = await api('/messages/conversations');
+    const total = data.conversations.reduce((acc, c) => acc + (c.non_lus || 0), 0);
+    if (total > 0) { badge.style.display = 'block'; badge.textContent = total; }
+    else { badge.style.display = 'none'; }
+  } catch {}
+}
+
+function ouvrirConversation(convId, nom, annonce) {
+  currentConvId = convId;
+  document.getElementById('conv-nom').textContent = nom;
+  document.getElementById('conv-annonce').textContent = annonce;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-conversation').classList.add('active');
+  chargerMessages(convId);
+  if (socket) socket.emit('messages:lus', { conversation_id: convId });
+}
+
+function fermerConversation() {
+  currentConvId = null;
+  document.getElementById('screen-conversation').classList.remove('active');
+  showScreen('messages');
+}
+
+async function chargerMessages(convId) {
+  const c = document.getElementById('conv-messages');
+  c.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  try {
+    const data = await api('/messages/conversations/' + convId + '/messages');
+    c.innerHTML = data.messages.map(m => {
+      const moi = m.expediteur_id === currentUser.id;
+      return '<div class="msg-wrap ' + (moi ? 'moi' : 'eux') + '">' +
+        '<div class="msg-bubble">' + m.contenu + '</div>' +
+        '<div class="msg-heure">' + formatDate(m.envoye_le) + '</div>' +
+      '</div>';
+    }).join('');
+    c.scrollTop = c.scrollHeight;
+  } catch (err) {
+    c.innerHTML = '<div class="alert alert-error">' + err.message + '</div>';
+  }
+}
+
+function envoyerMsg() {
+  const inp = document.getElementById('conv-input-text');
+  const txt = inp.value.trim();
+  if (!txt || !socket || !currentConvId) return;
+  socket.emit('message:envoyer', { conversation_id: currentConvId, contenu: txt });
+  inp.value = '';
+}
+
+function ajouterMsgUI(msg) {
+  const c = document.getElementById('conv-messages');
+  const moi = msg.expediteur_id === currentUser.id;
+  c.innerHTML += '<div class="msg-wrap ' + (moi ? 'moi' : 'eux') + '">' +
+    '<div class="msg-bubble">' + msg.contenu + '</div>' +
+    '<div class="msg-heure">' + formatDate(msg.envoye_le) + '</div>' +
+  '</div>';
+  c.scrollTop = c.scrollHeight;
+}
+
+// ============================================
+// PUBLIER
 // ============================================
 function majPublier() {
   const c = document.getElementById('publier-content');
   if (!currentUser) {
-    c.innerHTML = '<div class="alert alert-info">Connectez-vous pour publier une annonce.</div>';
+    c.innerHTML = '<div class="alert alert-info">Connectez-vous pour publier.</div>';
     return;
   }
   if (!['proprietaire', 'agence_pro'].includes(currentUser.abonnement)) {
-    c.innerHTML = '<div class="alert alert-info">Abonnement Propriétaire ou Agence Pro requis pour publier.</div>';
+    c.innerHTML = '<div class="alert alert-info">Abonnement Propriétaire ou Agence Pro requis.<br><br></div>' +
+      '<button class="btn" onclick="ouvrirPaiement()">Souscrire un abonnement</button>';
     return;
   }
   c.innerHTML = `
@@ -403,7 +1217,7 @@ function majPublier() {
       <label>Titre</label>
       <input id="pub-titre" placeholder="Ex: Studio meublé Cadjèhoun">
       <label>Description</label>
-      <textarea id="pub-desc" rows="3" placeholder="Décrivez votre logement..."></textarea>
+      <textarea id="pub-desc" rows="3" placeholder="Décrivez le logement..."></textarea>
       <div class="row">
         <div>
           <label>Prix (FCFA)</label>
@@ -421,12 +1235,54 @@ function majPublier() {
       </select>
       <label>Quartier</label>
       <input id="pub-quartier" placeholder="Ex: Cadjèhoun">
+      
+      <label>Équipements</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="pub-equips">
+        ${Object.keys(EQUIP_LABELS).map(e => 
+          '<div class="chip" data-eq="' + e + '" onclick="this.classList.toggle(\'active\')">' + EQUIP_LABELS[e] + '</div>'
+        ).join('')}
+      </div>
+      
+      <label>Photos</label>
+      <div class="uploader" onclick="document.getElementById('pub-photos').click()">
+        <div class="uploader-emoji">📷</div>
+        <div style="font-size:13px;color:#6b6560;">Ajouter des photos</div>
+        <div style="font-size:11px;color:#B4B2A9;margin-top:4px;">Maximum 5 photos</div>
+      </div>
+      <input type="file" id="pub-photos" accept="image/*" multiple style="display:none;" onchange="previewPhotos(event)">
+      <div class="photos-preview" id="photos-preview"></div>
+      
       <button class="btn" onclick="publier()" style="margin-top:14px;">Publier l'annonce</button>
       <div id="pub-msg"></div>
     </div>`;
 }
 
+let photosToUpload = [];
+function previewPhotos(e) {
+  const files = Array.from(e.target.files).slice(0, 5);
+  photosToUpload = files;
+  const preview = document.getElementById('photos-preview');
+  preview.innerHTML = files.map((f, i) => {
+    const url = URL.createObjectURL(f);
+    return '<div class="photo-preview" style="background-image:url(' + url + ')"><div class="remove" onclick="retirerPhoto(' + i + ')">✕</div></div>';
+  }).join('');
+}
+
+function retirerPhoto(i) {
+  photosToUpload.splice(i, 1);
+  const preview = document.getElementById('photos-preview');
+  preview.innerHTML = photosToUpload.map((f, idx) => {
+    const url = URL.createObjectURL(f);
+    return '<div class="photo-preview" style="background-image:url(' + url + ')"><div class="remove" onclick="retirerPhoto(' + idx + ')">✕</div></div>';
+  }).join('');
+}
+
 async function publier() {
+  const equips = {};
+  document.querySelectorAll('#pub-equips .chip.active').forEach(c => {
+    equips[c.dataset.eq] = true;
+  });
+  
   const data = {
     categorie_nom: document.getElementById('pub-cat').value,
     titre: document.getElementById('pub-titre').value.trim(),
@@ -435,69 +1291,193 @@ async function publier() {
     superficie: parseFloat(document.getElementById('pub-surf').value) || null,
     ville: document.getElementById('pub-ville').value,
     quartier: document.getElementById('pub-quartier').value.trim(),
-    equipements: { eau: true, electricite: true },
+    equipements: equips,
   };
-  
   if (!data.titre || !data.prix || !data.quartier) {
     return showMsg('pub-msg', 'Champs obligatoires manquants', 'error');
   }
   
   try {
-    showMsg('pub-msg', 'Publication en cours...', 'info');
+    showMsg('pub-msg', '<span class="spinner"></span> Publication...', 'info');
     const res = await api('/annonces', 'POST', data);
-    showMsg('pub-msg', 'Annonce soumise pour vérification ! ID: ' + res.id.slice(0,8));
+    
+    // Upload photos si présentes
+    if (photosToUpload.length > 0) {
+      const fd = new FormData();
+      photosToUpload.forEach(p => fd.append('photos', p));
+      try {
+        await api('/annonces/' + res.id + '/photos', 'POST', fd, true);
+      } catch (e) { console.warn('Erreur upload photos:', e); }
+    }
+    
+    showMsg('pub-msg', '✅ Annonce soumise pour vérification !');
+    setTimeout(() => { showScreen('annonces'); photosToUpload = []; }, 2000);
   } catch (err) {
     showMsg('pub-msg', err.message, 'error');
   }
 }
 
 // ============================================
-// Admin
+// PAIEMENT
 // ============================================
-async function majAdmin() {
-  const c = document.getElementById('admin-content');
-  if (!currentUser || currentUser.role !== 'admin') {
-    c.innerHTML = '<div class="alert alert-info">Connectez-vous en tant qu\'admin pour accéder.</div>';
-    return;
+function ouvrirPaiement() {
+  etapePaiement = 1;
+  planChoisi = 'proprietaire';
+  opChoisi = 'mtn';
+  document.getElementById('modal-paiement').style.display = 'flex';
+  majPaiement();
+}
+
+function majPaiement() {
+  // Mise à jour barre étapes
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('seg-' + i).classList.toggle('actif', i <= etapePaiement);
   }
-  c.innerHTML = '<div class="loading">Chargement des stats...</div>';
+  
+  const c = document.getElementById('paiement-content');
+  
+  if (etapePaiement === 1) {
+    document.getElementById('paiement-titre').textContent = 'Choisir un plan';
+    c.innerHTML = Object.keys(PLANS).map(k => {
+      const p = PLANS[k];
+      return '<div class="plan-card ' + (planChoisi === k ? 'actif' : '') + '" onclick="planChoisi=\'' + k + '\';majPaiement()">' +
+        (p.recommande ? '<div class="plan-recommande">RECOMMANDÉ</div>' : '') +
+        '<div class="plan-row">' +
+          '<div><div class="plan-titre">' + p.label + '</div><div class="plan-desc">' + p.desc + '</div></div>' +
+          '<div class="plan-prix">' + p.montant.toLocaleString() + '<div class="unit">FCFA/mois</div></div>' +
+        '</div>' +
+      '</div>';
+    }).join('') +
+    '<button class="btn" style="margin-top:12px;" onclick="etapePaiement=2;majPaiement()">Continuer →</button>';
+  } else if (etapePaiement === 2) {
+    document.getElementById('paiement-titre').textContent = 'Choisir un opérateur';
+    c.innerHTML = Object.keys(OPS).map(k => {
+      const o = OPS[k];
+      return '<div class="op-card ' + (opChoisi === k ? 'actif' : '') + '" onclick="opChoisi=\'' + k + '\';majPaiement()">' +
+        '<div class="op-avatar ' + o.class + '">' + o.short + '</div>' +
+        '<div class="op-info"><div class="op-nom">' + o.label + '</div></div>' +
+        (opChoisi === k ? '<div class="op-check">✓</div>' : '') +
+      '</div>';
+    }).join('') +
+    '<div class="row" style="margin-top:12px;gap:8px;">' +
+      '<button class="btn btn-ghost" onclick="etapePaiement=1;majPaiement()">← Retour</button>' +
+      '<button class="btn" onclick="etapePaiement=3;majPaiement()">Continuer →</button>' +
+    '</div>';
+  } else if (etapePaiement === 3) {
+    document.getElementById('paiement-titre').textContent = 'Numéro Mobile Money';
+    const p = PLANS[planChoisi];
+    const o = OPS[opChoisi];
+    c.innerHTML = 
+      '<div class="alert alert-info" style="display:flex;gap:10px;align-items:center;">' +
+        '<div class="op-avatar ' + o.class + '" style="width:36px;height:36px;font-size:11px;">' + o.short + '</div>' +
+        '<div>' + o.label + '</div>' +
+      '</div>' +
+      '<label>Numéro de téléphone</label>' +
+      '<input type="tel" id="pay-tel" placeholder="+229..." value="' + (currentUser?.telephone || '') + '">' +
+      '<div class="card" style="background:#F1EFE8;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Plan</span><span style="font-weight:600;">' + p.label + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;"><span>Montant</span><span style="font-weight:700;color:#BA7517;font-size:16px;">' + p.montant.toLocaleString() + ' FCFA</span></div>' +
+      '</div>' +
+      '<div class="row" style="margin-top:12px;gap:8px;">' +
+        '<button class="btn btn-ghost" onclick="etapePaiement=2;majPaiement()">← Retour</button>' +
+        '<button class="btn" onclick="lancerPaiement()">Confirmer le paiement</button>' +
+      '</div>' +
+      '<div id="pay-msg"></div>';
+  }
+}
+
+async function lancerPaiement() {
+  const tel = document.getElementById('pay-tel').value.trim();
+  if (!tel) return showMsg('pay-msg', 'Numéro requis', 'error');
   try {
-    const stats = await api('/admin/stats');
-    c.innerHTML = `
-      <div class="card">
-        <h3>📊 Statistiques globales</h3>
-        <div class="kvtable">
-          <div class="section-divider">Annonces</div>
-          <div><span class="key">En attente</span><span class="val">${stats.annonces.en_attente || 0}</span></div>
-          <div><span class="key">Publiées</span><span class="val">${stats.annonces.publiees || 0}</span></div>
-          <div><span class="key">Disponibles</span><span class="val">${stats.annonces.disponibles || 0}</span></div>
-          
-          <div class="section-divider">Utilisateurs</div>
-          <div><span class="key">Total</span><span class="val">${stats.users.total}</span></div>
-          <div><span class="key">Chercheurs</span><span class="val">${stats.users.chercheurs}</span></div>
-          <div><span class="key">Propriétaires</span><span class="val">${stats.users.proprietaires}</span></div>
-          <div><span class="key">Agences</span><span class="val">${stats.users.agences}</span></div>
-          
-          <div class="section-divider">Revenus</div>
-          <div><span class="key">Mois courant</span><span class="val">${parseInt(stats.revenus.mois_courant).toLocaleString()} FCFA</span></div>
-          <div><span class="key">Total cumulé</span><span class="val">${parseInt(stats.revenus.total_cumule).toLocaleString()} FCFA</span></div>
-          <div><span class="key">Paiements ce mois</span><span class="val">${stats.revenus.paiements_mois}</span></div>
-          
-          <div class="section-divider">Modération</div>
-          <div><span class="key">Avis en attente</span><span class="val">${stats.avis_en_attente}</span></div>
-        </div>
-      </div>
-      <button class="btn btn-secondary" onclick="majAdmin()" style="margin-top:14px;">Actualiser les stats</button>
-    `;
+    showMsg('pay-msg', '<span class="spinner"></span> Initiation...', 'info');
+    const data = await api('/paiements/initier', 'POST', {
+      plan: planChoisi, operateur: opChoisi, numero_tel: tel,
+    });
+    showMsg('pay-msg', '✅ ' + data.message + '<br><br>Référence : ' + data.reference);
+    // Rappel: ce paiement reste "en_attente" jusqu'au webhook de l'opérateur en production réelle
   } catch (err) {
-    c.innerHTML = `<div class="alert alert-error">Erreur: ${err.message}</div>`;
+    showMsg('pay-msg', err.message, 'error');
   }
 }
 
 // ============================================
-// Init
+// PROFIL
 // ============================================
-majUI();
+async function majProfil() {
+  const c = document.getElementById('profil-content');
+  if (!currentUser) {
+    c.innerHTML = '<div class="alert alert-info">Connectez-vous d\'abord.</div>';
+    return;
+  }
+  
+  const initiales = ((currentUser.prenom?.[0] || '') + (currentUser.nom?.[0] || '')).toUpperCase();
+  let stats = '';
+  
+  if (currentUser.role === 'admin') {
+    try {
+      const data = await api('/admin/stats');
+      stats = '<div class="card"><h3>📊 Stats globales (admin)</h3>' +
+        '<div style="font-size:12px;line-height:1.7;">' +
+          '<div>👥 ' + data.users.total + ' utilisateur(s)</div>' +
+          '<div>🏠 ' + data.annonces.publiees + ' annonce(s) publiée(s) · ' + data.annonces.en_attente + ' en attente</div>' +
+          '<div>💰 ' + parseInt(data.revenus.total_cumule).toLocaleString() + ' FCFA cumulés</div>' +
+          '<div>⚖️ ' + data.avis_en_attente + ' avis à modérer</div>' +
+        '</div></div>';
+    } catch {}
+  }
+  
+  c.innerHTML = 
+    '<div class="card" style="display:flex;gap:12px;align-items:center;">' +
+      '<div style="width:60px;height:60px;border-radius:30px;background:#BA7517;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;">' + initiales + '</div>' +
+      '<div>' +
+        '<div style="font-size:16px;font-weight:700;">' + currentUser.prenom + ' ' + currentUser.nom + '</div>' +
+        '<div style="font-size:12px;color:#6b6560;">' + currentUser.telephone + '</div>' +
+        '<div style="display:flex;gap:6px;margin-top:6px;">' +
+          '<span class="statut-badge statut-disponible">' + currentUser.role + '</span>' +
+          '<span class="statut-badge statut-en_attente">' + (currentUser.abonnement || 'gratuit') + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    stats +
+    '<div class="card">' +
+      '<h3>Abonnement</h3>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        '<div>' +
+          '<div style="font-size:16px;font-weight:700;color:#BA7517;">' + (currentUser.abonnement || 'gratuit') + '</div>' +
+          (currentUser.abo_expire_le ? '<div style="font-size:11px;color:#B4B2A9;">Expire le ' + new Date(currentUser.abo_expire_le).toLocaleDateString('fr-FR') + '</div>' : '') +
+        '</div>' +
+        '<button class="btn btn-sm" onclick="ouvrirPaiement()">Changer</button>' +
+      '</div>' +
+    '</div>' +
+    '<button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:14px;">Se déconnecter</button>';
+}
+
+// ============================================
+// MODAL HELPERS
+// ============================================
+function fermerModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ============================================
+// INIT
+// ============================================
+async function init() {
+  await pingAPI();
+  setInterval(pingAPI, 30000);
+  await chargerCategories();
+  renderFiltres();
+  majUI();
+  if (currentUser && token) {
+    initSocket();
+    setTimeout(majBadgeMessages, 2000);
+  }
+  showScreen('annonces');
+}
+
+init();
 </script>
+
 </body>
 </html>
