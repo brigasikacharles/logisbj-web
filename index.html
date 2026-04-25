@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>LogisBJ — Plateforme de location vérifiée au Bénin</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fafaf7;
+  color: #1a1814;
+  font-size: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+.container { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fafaf7; padding-bottom: 80px; }
+.header {
+  background: #fff; padding: 14px 16px; border-bottom: 0.5px solid #e8e4dc;
+  display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 0; z-index: 10;
+}
+.logo { font-size: 18px; font-weight: 700; }
+.logo-or { color: #BA7517; }
+.user-pill {
+  background: #FAEEDA; color: #633806; padding: 4px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 600;
+}
+.tabs {
+  display: flex; background: #fff; border-bottom: 0.5px solid #e8e4dc;
+  position: sticky; top: 49px; z-index: 9;
+}
+.tab {
+  flex: 1; padding: 12px; text-align: center; font-size: 12px; cursor: pointer;
+  border-bottom: 2px solid transparent; color: #6b6560; font-weight: 500;
+}
+.tab.active { color: #BA7517; border-bottom-color: #BA7517; }
+.screen { display: none; padding: 16px; }
+.screen.active { display: block; }
+.card {
+  background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px;
+  border: 0.5px solid #e8e4dc;
+}
+.btn {
+  background: #BA7517; color: #fff; border: 0; padding: 13px 16px;
+  border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+  width: 100%; transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.9; }
+.btn:disabled { background: #D3D1C7; cursor: not-allowed; }
+.btn-secondary { background: #fff; color: #BA7517; border: 1.5px solid #BA7517; }
+.btn-danger { background: #791F1F; }
+input, select, textarea {
+  width: 100%; padding: 12px 13px; border: 0.5px solid #e8e4dc;
+  border-radius: 10px; font-size: 14px; background: #fff; color: #1a1814;
+  margin-bottom: 10px; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid #BA7517; outline-offset: -2px; }
+label {
+  display: block; font-size: 12px; font-weight: 600; color: #4a4845;
+  margin-bottom: 5px; margin-top: 8px;
+}
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; }
+h2 { font-size: 18px; margin-bottom: 14px; }
+h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
+.alert {
+  padding: 10px 12px; border-radius: 8px; font-size: 13px;
+  margin: 10px 0; line-height: 1.5;
+}
+.alert-success { background: #EAF3DE; color: #27500A; border-left: 3px solid #3B6D11; }
+.alert-error { background: #FCEBEB; color: #791F1F; border-left: 3px solid #E24B4A; }
+.alert-info { background: #FAEEDA; color: #633806; border-left: 3px solid #BA7517; }
+.statut-badge {
+  display: inline-block; padding: 3px 8px; border-radius: 8px;
+  font-size: 10px; font-weight: 600;
+}
+.statut-disponible { background: #EAF3DE; color: #27500A; }
+.statut-en_cours { background: #FAEEDA; color: #633806; }
+.statut-indisponible { background: #FCEBEB; color: #791F1F; }
+.statut-en_attente { background: #E6F1FB; color: #0C447C; }
+.annonce-card { cursor: pointer; transition: transform 0.1s; }
+.annonce-card:hover { transform: translateY(-1px); border-color: #BA7517; }
+.annonce-prix { font-size: 18px; font-weight: 700; color: #BA7517; margin: 6px 0; }
+.annonce-meta { font-size: 11px; color: #6b6560; }
+.empty {
+  text-align: center; padding: 60px 20px; color: #6b6560;
+}
+.empty-emoji { font-size: 48px; margin-bottom: 12px; }
+.loading { text-align: center; padding: 30px; color: #6b6560; font-size: 13px; }
+.api-status {
+  font-size: 10px; padding: 3px 8px; border-radius: 6px;
+  background: #EAF3DE; color: #27500A;
+}
+.api-status.error { background: #FCEBEB; color: #791F1F; }
+.section-divider { margin: 20px 0 10px; font-size: 11px; color: #888780; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+.kvtable { font-size: 12px; line-height: 1.7; }
+.kvtable .key { color: #6b6560; display: inline-block; min-width: 100px; }
+.kvtable .val { color: #1a1814; font-weight: 500; }
+.config-box {
+  background: #F1EFE8; padding: 10px; border-radius: 8px; font-size: 11px;
+  font-family: ui-monospace, monospace; word-break: break-all; margin-bottom: 14px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo"><span class="logo-or">Logis</span>BJ</div>
+    <div id="user-pill" class="user-pill" style="display:none;">Connecté</div>
+    <div id="api-status" class="api-status">API: vérification...</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="showScreen('connexion')">Connexion</div>
+    <div class="tab" onclick="showScreen('annonces')">Annonces</div>
+    <div class="tab" onclick="showScreen('publier')">Publier</div>
+    <div class="tab" onclick="showScreen('admin')">Admin</div>
+  </div>
+
+  <!-- ÉCRAN CONNEXION -->
+  <div id="screen-connexion" class="screen active">
+    <h2>Connexion / Inscription</h2>
+    <div class="config-box">API : <strong id="api-url"></strong></div>
+    
+    <div class="card">
+      <h3>Se connecter</h3>
+      <label>Téléphone</label>
+      <input type="tel" id="login-tel" placeholder="+229..." value="+2290196003114">
+      <label>Mot de passe</label>
+      <input type="password" id="login-pwd" placeholder="••••••••" value="MotDePasse2026">
+      <button class="btn" onclick="seConnecter()">Se connecter</button>
+      <div id="login-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>Créer un compte</h3>
+      <div class="row">
+        <div>
+          <label>Prénom</label>
+          <input type="text" id="reg-prenom" placeholder="Sika">
+        </div>
+        <div>
+          <label>Nom</label>
+          <input type="text" id="reg-nom" placeholder="BRIGA">
+        </div>
+      </div>
+      <label>Téléphone (+229...)</label>
+      <input type="tel" id="reg-tel" placeholder="+229...">
+      <label>Mot de passe</label>
+      <input type="password" id="reg-pwd" placeholder="••••••••">
+      <label>Rôle</label>
+      <select id="reg-role">
+        <option value="chercheur">Chercheur de logement</option>
+        <option value="proprietaire">Propriétaire</option>
+        <option value="agence">Agence</option>
+      </select>
+      <label>Ville</label>
+      <select id="reg-ville">
+        <option>Cotonou</option>
+        <option>Porto-Novo</option>
+        <option>Parakou</option>
+        <option>Abomey-Calavi</option>
+        <option>Bohicon</option>
+      </select>
+      <button class="btn btn-secondary" onclick="sInscrire()">S'inscrire</button>
+      <div id="reg-msg"></div>
+    </div>
+
+    <div id="user-info" style="display:none;" class="card">
+      <h3>Mon compte</h3>
+      <div id="user-details" class="kvtable"></div>
+      <button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:14px;">Se déconnecter</button>
+    </div>
+  </div>
+
+  <!-- ÉCRAN ANNONCES -->
+  <div id="screen-annonces" class="screen">
+    <h2>Annonces vérifiées</h2>
+    <button class="btn btn-secondary" onclick="chargerAnnonces()" style="margin-bottom:14px;">Actualiser</button>
+    <div id="annonces-list">
+      <div class="loading">Chargement...</div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN PUBLIER -->
+  <div id="screen-publier" class="screen">
+    <h2>Publier une annonce</h2>
+    <div id="publier-content">
+      <div class="alert alert-info">Connectez-vous pour publier une annonce.</div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN ADMIN -->
+  <div id="screen-admin" class="screen">
+    <h2>Tableau de bord admin</h2>
+    <div id="admin-content">
+      <div class="alert alert-info">Connectez-vous en tant qu'admin pour accéder.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// Configuration
+// ============================================
+const API_URL = 'https://logisbj-backend.onrender.com/api';
+document.getElementById('api-url').textContent = API_URL;
+
+let token = localStorage.getItem('logisbj_token');
+let currentUser = JSON.parse(localStorage.getItem('logisbj_user') || 'null');
+
+// ============================================
+// Vérifier que l'API répond
+// ============================================
+async function pingAPI() {
+  try {
+    const res = await fetch(API_URL.replace('/api', '/health'));
+    const data = await res.json();
+    document.getElementById('api-status').textContent = 'API: ' + data.status;
+    document.getElementById('api-status').className = 'api-status';
+  } catch {
+    document.getElementById('api-status').textContent = 'API: hors ligne';
+    document.getElementById('api-status').className = 'api-status error';
+  }
+}
+pingAPI();
+
+// ============================================
+// Navigation
+// ============================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(name.replace('connexion', 'connexion'))) t.classList.add('active');
+  });
+  if (name === 'annonces') chargerAnnonces();
+  if (name === 'publier') majPublier();
+  if (name === 'admin') majAdmin();
+}
+
+// ============================================
+// API helpers
+// ============================================
+async function api(path, method = 'GET', body) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API_URL + path, {
+    method, headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erreur réseau');
+  return data;
+}
+
+function showMsg(id, msg, type = 'success') {
+  const el = document.getElementById(id);
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => { el.innerHTML = ''; }, 6000);
+}
+
+// ============================================
+// Connexion / Inscription
+// ============================================
+async function seConnecter() {
+  const tel = document.getElementById('login-tel').value.trim();
+  const pwd = document.getElementById('login-pwd').value;
+  if (!tel || !pwd) return showMsg('login-msg', 'Téléphone et mot de passe requis', 'error');
+  
+  try {
+    const data = await api('/auth/connexion', 'POST', {
+      telephone: tel, mot_de_passe: pwd,
+    });
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('logisbj_token', token);
+    localStorage.setItem('logisbj_refresh', data.refreshToken);
+    localStorage.setItem('logisbj_user', JSON.stringify(currentUser));
+    showMsg('login-msg', 'Connecté avec succès ! Bienvenue ' + currentUser.prenom + '.');
+    majUI();
+  } catch (err) {
+    showMsg('login-msg', err.message, 'error');
+  }
+}
+
+async function sInscrire() {
+  const data = {
+    nom: document.getElementById('reg-nom').value.trim(),
+    prenom: document.getElementById('reg-prenom').value.trim(),
+    telephone: document.getElementById('reg-tel').value.trim(),
+    mot_de_passe: document.getElementById('reg-pwd').value,
+    role: document.getElementById('reg-role').value,
+    ville: document.getElementById('reg-ville').value,
+  };
+  if (!data.nom || !data.prenom || !data.telephone || !data.mot_de_passe) {
+    return showMsg('reg-msg', 'Remplissez tous les champs', 'error');
+  }
+  try {
+    const res = await api('/auth/inscription', 'POST', data);
+    showMsg('reg-msg', 'Compte créé ! ID : ' + res.userId.slice(0,8) + '...');
+  } catch (err) {
+    showMsg('reg-msg', err.message, 'error');
+  }
+}
+
+function seDeconnecter() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('logisbj_token');
+  localStorage.removeItem('logisbj_refresh');
+  localStorage.removeItem('logisbj_user');
+  majUI();
+  showScreen('connexion');
+}
+
+// ============================================
+// Mise à jour UI
+// ============================================
+function majUI() {
+  const pill = document.getElementById('user-pill');
+  const info = document.getElementById('user-info');
+  
+  if (currentUser) {
+    pill.style.display = 'block';
+    pill.textContent = currentUser.prenom + ' (' + currentUser.role + ')';
+    info.style.display = 'block';
+    document.getElementById('user-details').innerHTML = `
+      <div><span class="key">ID</span><span class="val">${currentUser.id.slice(0,8)}...</span></div>
+      <div><span class="key">Nom</span><span class="val">${currentUser.prenom} ${currentUser.nom}</span></div>
+      <div><span class="key">Téléphone</span><span class="val">${currentUser.telephone}</span></div>
+      <div><span class="key">Rôle</span><span class="val">${currentUser.role}</span></div>
+      <div><span class="key">Abonnement</span><span class="val">${currentUser.abonnement || 'gratuit'}</span></div>
+      <div><span class="key">Vérifié</span><span class="val">${currentUser.tel_verifie ? '✓ Oui' : '✗ Non'}</span></div>
+    `;
+  } else {
+    pill.style.display = 'none';
+    info.style.display = 'none';
+  }
+}
+
+// ============================================
+// Annonces
+// ============================================
+async function chargerAnnonces() {
+  const list = document.getElementById('annonces-list');
+  list.innerHTML = '<div class="loading">Chargement...</div>';
+  try {
+    const data = await api('/annonces');
+    if (data.annonces.length === 0) {
+      list.innerHTML = `
+        <div class="empty">
+          <div class="empty-emoji">📦</div>
+          <div style="font-weight:600;margin-bottom:6px;">Aucune annonce vérifiée pour le moment</div>
+          <div style="font-size:12px;">Soyez le premier à publier une annonce !</div>
+        </div>`;
+      return;
+    }
+    list.innerHTML = data.annonces.map(a => `
+      <div class="card annonce-card">
+        <div style="display:flex;justify-content:space-between;align-items:start;">
+          <div style="font-weight:600;font-size:14px;">${a.titre || a.categorie}</div>
+          <span class="statut-badge statut-${a.statut}">${a.statut}</span>
+        </div>
+        <div class="annonce-prix">${a.prix.toLocaleString()} FCFA<span style="font-size:11px;font-weight:400;color:#6b6560;"> /mois</span></div>
+        <div class="annonce-meta">
+          📍 ${a.quartier}, ${a.ville}<br>
+          🏠 ${a.categorie} · ${a.superficie ? a.superficie + ' m²' : ''}
+        </div>
+      </div>
+    `).join('');
+    list.innerHTML += `<div style="text-align:center;font-size:11px;color:#6b6560;padding:14px;">Total : ${data.pagination.total} annonce(s)</div>`;
+  } catch (err) {
+    list.innerHTML = `<div class="alert alert-error">Erreur : ${err.message}</div>`;
+  }
+}
+
+// ============================================
+// Publier
+// ============================================
+function majPublier() {
+  const c = document.getElementById('publier-content');
+  if (!currentUser) {
+    c.innerHTML = '<div class="alert alert-info">Connectez-vous pour publier une annonce.</div>';
+    return;
+  }
+  if (!['proprietaire', 'agence_pro'].includes(currentUser.abonnement)) {
+    c.innerHTML = '<div class="alert alert-info">Abonnement Propriétaire ou Agence Pro requis pour publier.</div>';
+    return;
+  }
+  c.innerHTML = `
+    <div class="card">
+      <h3>Nouvelle annonce</h3>
+      <label>Catégorie</label>
+      <select id="pub-cat">
+        <option>Studio</option><option>1Ch/Salon</option><option>2Ch/Salon</option>
+        <option>3Ch/Salon</option><option>Appartement</option>
+        <option>Boutique à louer</option><option>Atelier à louer</option>
+      </select>
+      <label>Titre</label>
+      <input id="pub-titre" placeholder="Ex: Studio meublé Cadjèhoun">
+      <label>Description</label>
+      <textarea id="pub-desc" rows="3" placeholder="Décrivez votre logement..."></textarea>
+      <div class="row">
+        <div>
+          <label>Prix (FCFA)</label>
+          <input type="number" id="pub-prix" placeholder="45000">
+        </div>
+        <div>
+          <label>Superficie (m²)</label>
+          <input type="number" id="pub-surf" placeholder="35">
+        </div>
+      </div>
+      <label>Ville</label>
+      <select id="pub-ville">
+        <option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option>
+        <option>Abomey-Calavi</option><option>Bohicon</option>
+      </select>
+      <label>Quartier</label>
+      <input id="pub-quartier" placeholder="Ex: Cadjèhoun">
+      <button class="btn" onclick="publier()" style="margin-top:14px;">Publier l'annonce</button>
+      <div id="pub-msg"></div>
+    </div>`;
+}
+
+async function publier() {
+  const data = {
+    categorie_nom: document.getElementById('pub-cat').value,
+    titre: document.getElementById('pub-titre').value.trim(),
+    description: document.getElementById('pub-desc').value.trim(),
+    prix: parseInt(document.getElementById('pub-prix').value),
+    superficie: parseFloat(document.getElementById('pub-surf').value) || null,
+    ville: document.getElementById('pub-ville').value,
+    quartier: document.getElementById('pub-quartier').value.trim(),
+    equipements: { eau: true, electricite: true },
+  };
+  
+  if (!data.titre || !data.prix || !data.quartier) {
+    return showMsg('pub-msg', 'Champs obligatoires manquants', 'error');
+  }
+  
+  try {
+    showMsg('pub-msg', 'Publication en cours...', 'info');
+    const res = await api('/annonces', 'POST', data);
+    showMsg('pub-msg', 'Annonce soumise pour vérification ! ID: ' + res.id.slice(0,8));
+  } catch (err) {
+    showMsg('pub-msg', err.message, 'error');
+  }
+}
+
+// ============================================
+// Admin
+// ============================================
+async function majAdmin() {
+  const c = document.getElementById('admin-content');
+  if (!currentUser || currentUser.role !== 'admin') {
+    c.innerHTML = '<div class="alert alert-info">Connectez-vous en tant qu\'admin pour accéder.</div>';
+    return;
+  }
+  c.innerHTML = '<div class="loading">Chargement des stats...</div>';
+  try {
+    const stats = await api('/admin/stats');
+    c.innerHTML = `
+      <div class="card">
+        <h3>📊 Statistiques globales</h3>
+        <div class="kvtable">
+          <div class="section-divider">Annonces</div>
+          <div><span class="key">En attente</span><span class="val">${stats.annonces.en_attente || 0}</span></div>
+          <div><span class="key">Publiées</span><span class="val">${stats.annonces.publiees || 0}</span></div>
+          <div><span class="key">Disponibles</span><span class="val">${stats.annonces.disponibles || 0}</span></div>
+          
+          <div class="section-divider">Utilisateurs</div>
+          <div><span class="key">Total</span><span class="val">${stats.users.total}</span></div>
+          <div><span class="key">Chercheurs</span><span class="val">${stats.users.chercheurs}</span></div>
+          <div><span class="key">Propriétaires</span><span class="val">${stats.users.proprietaires}</span></div>
+          <div><span class="key">Agences</span><span class="val">${stats.users.agences}</span></div>
+          
+          <div class="section-divider">Revenus</div>
+          <div><span class="key">Mois courant</span><span class="val">${parseInt(stats.revenus.mois_courant).toLocaleString()} FCFA</span></div>
+          <div><span class="key">Total cumulé</span><span class="val">${parseInt(stats.revenus.total_cumule).toLocaleString()} FCFA</span></div>
+          <div><span class="key">Paiements ce mois</span><span class="val">${stats.revenus.paiements_mois}</span></div>
+          
+          <div class="section-divider">Modération</div>
+          <div><span class="key">Avis en attente</span><span class="val">${stats.avis_en_attente}</span></div>
+        </div>
+      </div>
+      <button class="btn btn-secondary" onclick="majAdmin()" style="margin-top:14px;">Actualiser les stats</button>
+    `;
+  } catch (err) {
+    c.innerHTML = `<div class="alert alert-error">Erreur: ${err.message}</div>`;
+  }
+}
+
+// ============================================
+// Init
+// ============================================
+majUI();
+</script>
+</body>
+</html>
