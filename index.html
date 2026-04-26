@@ -918,18 +918,16 @@ function setFiltre(key, val) {
 }
 
 async function chargerCategories() {
-  try {
-    // Appel SQL via une route - pour l'instant on hardcode (la liste est stable)
-    categories = [
-      { id: 'studio', nom: 'Studio' },
-      { id: '1ch', nom: '1Ch/Salon' },
-      { id: '2ch', nom: '2Ch/Salon' },
-      { id: '3ch', nom: '3Ch/Salon' },
-      { id: 'appartement', nom: 'Appartement' },
-      { id: 'boutique', nom: 'Boutique' },
-      { id: 'atelier', nom: 'Atelier' },
-    ];
-  } catch (err) { console.error(err); }
+  // UUID réels de tes catégories Neon — utilisés directement pour filtrer côté API
+  categories = [
+    { id: '63d6678d-51d5-497b-abbd-709847a4ad0a', nom: 'Studio' },
+    { id: 'cccfe59c-dc14-415d-88c1-9239c9d24dda', nom: '1Ch/Salon' },
+    { id: '5e73a3c0-988b-4b9c-912c-4ff53eaf0fdb', nom: '2Ch/Salon' },
+    { id: '751f9d40-c441-4db0-983b-2964495f7f3c', nom: '3Ch/Salon' },
+    { id: 'be20d1a2-21dc-4c2d-8f3e-4829683c5f60', nom: 'Appartement' },
+    { id: '595a3e7a-b16b-4d45-87fb-2ad7d4bf2c06', nom: 'Boutique' },
+    { id: 'eedbb309-1a92-4688-b81c-ad2d40834140', nom: 'Atelier' },
+  ];
 }
 
 async function chargerAnnonces() {
@@ -939,25 +937,30 @@ async function chargerAnnonces() {
   try {
     const params = new URLSearchParams();
     if (filtres.ville) params.append('ville', filtres.ville);
+    if (filtres.categorie) params.append('categorie_id', filtres.categorie);
     const data = await api('/annonces?' + params.toString());
     
     compteur.textContent = data.pagination.total + ' offre' + (data.pagination.total > 1 ? 's' : '') + ' vérifiée' + (data.pagination.total > 1 ? 's' : '');
     
     if (data.annonces.length === 0) {
-      list.innerHTML = '<div class="empty"><div class="empty-emoji">📦</div><div style="font-weight:600;margin-bottom:6px;">Aucune annonce vérifiée</div><div style="font-size:12px;">Soyez le premier à publier !</div></div>';
+      list.innerHTML = '<div class="empty"><div class="empty-emoji">📦</div><div style="font-weight:600;margin-bottom:6px;">Aucune annonce avec ces filtres</div><div style="font-size:12px;">Essayez d\'\u00e9largir votre recherche</div></div>';
       return;
     }
     
     list.innerHTML = '<div class="annonces-grid">' + data.annonces.map(a => {
       const photo = (a.photos && a.photos.length > 0) ? a.photos[0] : null;
       const ico = a.icone || a.categorie?.charAt(0)?.toUpperCase() || '?';
+      const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : a.statut === 'indisponible' ? 'Indisponible' : 'En attente';
       return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
         '<div class="annonce-mini-strip ' + (photo ? 'has-photo' : '') + '"' + (photo ? ' style="background-image:url(' + photo + ')"' : '') + '>' +
           (photo ? '' : '<div class="annonce-mini-icon">' + ico + '</div>') +
           (a.verifie ? '<div class="annonce-mini-verifie">✓ Vérifié</div>' : '') +
         '</div>' +
         '<div class="annonce-mini-body">' +
-          '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;margin-bottom:4px;">' +
+            '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+            '<div class="statut-badge statut-' + a.statut + '" style="font-size:8px;padding:2px 5px;">' + statutLabel + '</div>' +
+          '</div>' +
           '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
           '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
           (a.note_moyenne > 0 ? '<div style="font-size:10px;color:#BA7517;margin-top:3px;">★ ' + a.note_moyenne + ' (' + a.nb_avis + ')</div>' : '') +
@@ -1120,24 +1123,23 @@ async function chargerMarqueurs(ville) {
   if (!markersLayer) return;
   markersLayer.clearLayers();
   try {
-    const params = ville ? '?ville=' + ville : '';
+    const params = ville ? '?ville=' + encodeURIComponent(ville) : '';
     const data = await api('/annonces' + params);
     
-    // Annonces de démo si pas de coordonnées
-    const annoncesGeo = data.annonces.filter(a => a.latitude && a.longitude);
-    let listeAffichage = annoncesGeo.length > 0 ? annoncesGeo : [];
+    // Pour chaque annonce, on utilise ses vraies coordonnées si disponibles,
+    // sinon on la place près du centre de sa ville avec un léger décalage aléatoire
+    const annoncesAvecCoords = data.annonces.map((a, i) => {
+      if (a.latitude && a.longitude) return a;
+      const villeC = VILLES_COORDS[a.ville];
+      if (!villeC) return null;
+      // Décalage déterministe basé sur l'ID pour stabilité visuelle
+      const seed = a.id ? a.id.charCodeAt(0) + a.id.charCodeAt(5) : i;
+      const dlat = ((seed * 7) % 100 - 50) / 1000;  // ±0.05
+      const dlng = ((seed * 13) % 100 - 50) / 1000;
+      return { ...a, latitude: villeC.lat + dlat, longitude: villeC.lng + dlng };
+    }).filter(Boolean);
     
-    // Si pas d'annonces géolocalisées, on en place fictivement autour de Cotonou avec leur ville
-    if (annoncesGeo.length === 0 && data.annonces.length > 0) {
-      const c = VILLES_COORDS['Cotonou'];
-      listeAffichage = data.annonces.map((a, i) => ({
-        ...a,
-        latitude: c.lat + (Math.random() - 0.5) * 0.04,
-        longitude: c.lng + (Math.random() - 0.5) * 0.04,
-      }));
-    }
-    
-    listeAffichage.forEach(a => {
+    annoncesAvecCoords.forEach(a => {
       const couleur = STATUT_COULEURS[a.statut] || '#BA7517';
       const icon = L.divIcon({
         className: '',
