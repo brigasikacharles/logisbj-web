@@ -110,12 +110,16 @@ h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
   background: #fff; border-bottom: 0.5px solid #e8e4dc; padding: 10px 14px;
   position: sticky; top: 49px; z-index: 40;
 }
-.filtres-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-.filtres-scroll::-webkit-scrollbar { display: none; }
+.filtres-scroll {
+  display: flex; gap: 6px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
 .chip {
   flex-shrink: 0; padding: 6px 12px; border-radius: 18px; font-size: 12px;
   background: #F1EFE8; color: #4a4845; border: 0.5px solid #D3D1C7;
   cursor: pointer; white-space: nowrap; font-weight: 500;
+  user-select: none;
 }
 .chip.active { background: #BA7517; color: #fff; border-color: #BA7517; }
 .compteur {
@@ -925,8 +929,8 @@ async function chargerCategories() {
     { id: '5e73a3c0-988b-4b9c-912c-4ff53eaf0fdb', nom: '2Ch/Salon' },
     { id: '751f9d40-c441-4db0-983b-2964495f7f3c', nom: '3Ch/Salon' },
     { id: 'be20d1a2-21dc-4c2d-8f3e-4829683c5f60', nom: 'Appartement' },
-    { id: '595a3e7a-b16b-4d45-87fb-2ad7d4bf2c06', nom: 'Boutique' },
-    { id: 'eedbb309-1a92-4688-b81c-ad2d40834140', nom: 'Atelier' },
+    { id: '595a3e7a-b16b-4d45-87fb-2ad7d4bf2c06', nom: 'Boutique à louer' },
+    { id: 'eedbb309-1a92-4688-b81c-ad2d40834140', nom: 'Atelier à louer' },
   ];
 }
 
