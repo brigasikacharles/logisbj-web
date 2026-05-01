@@ -1,13 +1,16 @@
 {
-  "name": "Mon logement BJ",
+  "name": "Mon logement BJ - Location vérifiée",
   "short_name": "LogisBJ",
-  "description": "Plateforme de location vérifiée au Bénin — Studios, appartements, boutiques et ateliers à louer dans toutes les villes.",
+  "description": "Plateforme de location vérifiée au Bénin. Trouvez et publiez des annonces de studios, appartements, boutiques et ateliers. Toutes les annonces sont vérifiées par notre équipe pour vous garantir la fiabilité des biens et des propriétaires. Disponible à Cotonou, Porto-Novo, Parakou, Abomey-Calavi et Bohicon.",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "orientation": "portrait",
   "theme_color": "#633806",
   "background_color": "#633806",
   "lang": "fr",
+  "dir": "ltr",
   "scope": "/",
   "icons": [
     {
@@ -20,26 +23,105 @@
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["lifestyle", "business", "shopping"],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Liste des annonces vérifiées"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Plateforme LogisBJ"
+    }
+  ],
+  "categories": [
+    "lifestyle",
+    "business",
+    "shopping",
+    "productivity",
+    "social"
+  ],
+  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
   "shortcuts": [
     {
       "name": "Voir les annonces",
       "short_name": "Annonces",
-      "url": "/?screen=annonces"
+      "description": "Parcourir les logements disponibles",
+      "url": "/?screen=annonces",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Publier une annonce",
       "short_name": "Publier",
-      "url": "/?screen=publier"
+      "description": "Mettre en location votre logement",
+      "url": "/?screen=publier",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Mes messages",
+      "short_name": "Messages",
+      "description": "Conversations avec les propriétaires",
+      "url": "/?screen=messages",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 480
+  },
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "handle_links": "preferred"
 }
