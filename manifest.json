@@ -1,0 +1,45 @@
+{
+  "name": "Mon logement BJ",
+  "short_name": "LogisBJ",
+  "description": "Plateforme de location vérifiée au Bénin — Studios, appartements, boutiques et ateliers à louer dans toutes les villes.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#633806",
+  "background_color": "#633806",
+  "lang": "fr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "business", "shopping"],
+  "shortcuts": [
+    {
+      "name": "Voir les annonces",
+      "short_name": "Annonces",
+      "url": "/?screen=annonces"
+    },
+    {
+      "name": "Publier une annonce",
+      "short_name": "Publier",
+      "url": "/?screen=publier"
+    }
+  ]
+}

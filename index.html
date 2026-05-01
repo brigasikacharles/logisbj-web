@@ -4,6 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>LogisBJ — Plateforme de location vérifiée au Bénin</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#633806">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="LogisBJ">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+
+<!-- SEO -->
+<meta name="description" content="Plateforme de location vérifiée au Bénin — Studios, appartements, boutiques et ateliers à louer dans toutes les villes.">
+<meta property="og:title" content="LogisBJ — Logements vérifiés au Bénin">
+<meta property="og:description" content="Trouvez votre prochain logement vérifié au Bénin. Studios, appartements, boutiques et ateliers.">
+<meta property="og:type" content="website">
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -955,6 +971,8 @@ async function chargerAnnonces() {
       const photo = (a.photos && a.photos.length > 0) ? a.photos[0] : null;
       const ico = a.icone || a.categorie?.charAt(0)?.toUpperCase() || '?';
       const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : a.statut === 'indisponible' ? 'Indisponible' : 'En attente';
+      const statutBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : a.statut === 'indisponible' ? '#FCEBEB' : '#E6F1FB';
+      const statutColor = a.statut === 'disponible' ? '#27500A' : a.statut === 'en_cours' ? '#633806' : a.statut === 'indisponible' ? '#791F1F' : '#0C447C';
       return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
         '<div class="annonce-mini-strip ' + (photo ? 'has-photo' : '') + '"' + (photo ? ' style="background-image:url(' + photo + ')"' : '') + '>' +
           (photo ? '' : '<div class="annonce-mini-icon">' + ico + '</div>') +
@@ -963,7 +981,7 @@ async function chargerAnnonces() {
         '<div class="annonce-mini-body">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;margin-bottom:4px;">' +
             '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
-            '<div class="statut-badge statut-' + a.statut + '" style="font-size:8px;padding:2px 5px;">' + statutLabel + '</div>' +
+            '<div style="font-size:8px;font-weight:600;padding:2px 5px;border-radius:6px;background:' + statutBg + ';color:' + statutColor + ';">' + statutLabel + '</div>' +
           '</div>' +
           '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
           '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
@@ -1561,6 +1579,16 @@ async function init() {
     setTimeout(majBadgeMessages, 2000);
   }
   showScreen('annonces');
+  
+  // Enregistrer le Service Worker pour la PWA
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('PWA installable — Service Worker actif', reg.scope);
+    } catch (err) {
+      console.warn('Service Worker non enregistré:', err);
+    }
+  }
 }
 
 init();
