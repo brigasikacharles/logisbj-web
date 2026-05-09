@@ -1059,7 +1059,17 @@ async function ouvrirDetail(id) {
           '</div>').join('') : '') +
         '<div class="warn-box">⚠️ Ne versez aucun acompte avant la visite. LogisBJ ne collecte pas de caution.</div>' +
       '</div>';
-    
+    const avisFormHTML = utilisateurConnecte && utilisateurConnecte.role !== 'admin' ?
+  '<div class="section-title">Laisser un avis</div>' +
+  '<div class="avis-form">' +
+    '<div class="note-input" id="noteInput">' +
+      '★★★★★'.split('').map((s, i) =>
+        `<span class="star" data-note="${i+1}" onclick="noterAvis(${i+1})">★</span>`
+      ).join('') +
+    '</div>' +
+    '<textarea id="avisCommentaire" placeholder="Votre commentaire..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;font-size:13px;" rows="3"></textarea>' +
+    '<button class="btn" style="width:100%;background:#BA7517;color:#fff;" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
+  '</div>' : '';
     const footerHTML = '<div class="detail-footer">' +
         '<button class="btn-favori" onclick="this.classList.toggle(\'actif\'); this.textContent=this.classList.contains(\'actif\')?\'❤️\':\'🤍\'">🤍</button>' +
         '<button class="btn" onclick="contacterProprio(\'' + a.id + '\', \'' + (a.proprio_prenom || '').replace(/'/g, "\\'") + '\', \'' + (a.titre || a.categorie).replace(/'/g, "\\'") + '\')" ' + (a.statut !== 'disponible' ? 'disabled' : '') + '>' +
