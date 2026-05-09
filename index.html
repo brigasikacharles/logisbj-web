@@ -1059,7 +1059,17 @@ async function ouvrirDetail(id) {
           '</div>').join('') : '') +
         '<div class="warn-box">⚠️ Ne versez aucun acompte avant la visite. LogisBJ ne collecte pas de caution.</div>' +
       '</div>';
-    const avisFormHTML = utilisateurConnecte && utilisateurConnecte.role !== 'admin' ?
+   const avisFormHTML = utilisateurConnecte && utilisateurConnecte.role !== 'admin' ?
+  '<div class="section-title">Laisser un avis</div>' +
+  '<div class="avis-form">' +
+    '<div class="note-input" id="noteInput">' +
+      '★★★★★'.split('').map((s, i) =>
+        `<span class="star" data-note="${i+1}" onclick="noterAvis(${i+1})">★</span>`
+      ).join('') +
+    '</div>' +
+   wrap.innerHTML = '<div class="modal-detail-scroll">' + scrollHTML + avisFormHTML + '</div>' + footerHTML;
+    '<button class="btn" style="width:100%;background:#BA7517;color:#fff;" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
+  '</div>' : '';
   '<div class="section-title">Laisser un avis</div>' +
   '<div class="avis-form">' +
     '<div class="note-input" id="noteInput">' +
@@ -1602,7 +1612,36 @@ async function init() {
 }
 
 init();
-</script>
+</script>function noterAvis(note) {
+  document.querySelectorAll('#noteInput .star').forEach((s, i) => {
+    s.classList.toggle('actif', i < note);
+  });
+  document.getElementById('noteInput').dataset.note = note;
+}
+
+async function posterAvis(annonceId) {
+  const note = parseInt(document.getElementById('noteInput').dataset.note || 0);
+  const commentaire = document.getElementById('avisCommentaire').value.trim();
+  if (!note) return alert('Veuillez choisir une note.');
+  if (!commentaire) return alert('Veuillez écrire un commentaire.');
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`https://logisbj-backend.onrender.com/api/avis/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ annonce_id: annonceId, note_globale: note, commentaire })
+    });
+    if (res.ok) {
+      alert('Avis publié avec succès !');
+      location.reload();
+    } else {
+      const err = await res.json();
+      alert(err.error || 'Erreur lors de la publication.');
+    }
+  } catch (e) {
+    alert('Erreur réseau.');
+  }
+}
   <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
   import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging.js';
