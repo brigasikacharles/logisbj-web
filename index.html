@@ -1059,7 +1059,23 @@ async function ouvrirDetail(id) {
           '</div>').join('') : '') +
         '<div class="warn-box">⚠️ Ne versez aucun acompte avant la visite. LogisBJ ne collecte pas de caution.</div>' +
       '</div>';
-   const avisFormHTML = utilisateurConnecte && utilisateurConnecte.role !== 'admin' ?
+ const avisFormHTML = currentUser && currentUser.role !== 'admin' ?
+  '<div class="section-title">Laisser un avis</div>' +
+  '<div style="padding:0 16px 16px;">' +
+    '<div class="note-input" id="noteInput">' +
+      ['1','2','3','4','5'].map(i => '<span class="star" data-note="' + i + '" onclick="noterAvis(' + i + ')">★</span>').join('') +
+    '</div>' +
+    '<textarea id="avisCommentaire" placeholder="Votre commentaire..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;font-size:13px;" rows="3"></textarea>' +
+    '<button class="btn" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
+  '</div>' : '';
+  '<div class="section-title">Laisser un avis</div>' +
+  '<div style="padding:0 16px 16px;">' +
+    '<div class="note-input" id="noteInput">' +
+      ['1','2','3','4','5'].map(i => '<span class="star" data-note="' + i + '" onclick="noterAvis(' + i + ')">★</span>').join('') +
+    '</div>' +
+    '<textarea id="avisCommentaire" placeholder="Votre commentaire..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;font-size:13px;" rows="3"></textarea>' +
+    '<button class="btn" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
+  '</div>' : '';
   '<div class="section-title">Laisser un avis</div>' +
   '<div class="avis-form">' +
     '<div class="note-input" id="noteInput">' +
@@ -1625,7 +1641,7 @@ async function posterAvis(annonceId) {
   if (!note) return alert('Veuillez choisir une note.');
   if (!commentaire) return alert('Veuillez écrire un commentaire.');
   try {
-    const token = localStorage.getItem('token');
+   const token = localStorage.getItem('logisbj_token');
     const res = await fetch(`https://logisbj-backend.onrender.com/api/avis/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
