@@ -1069,19 +1069,7 @@ async function ouvrirDetail(id) {
     '<button class="btn" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
   '</div>' : '';
  
-   wrap.innerHTML = '<div class="modal-detail-scroll">' + scrollHTML + avisFormHTML + '</div>' + footerHTML;
-    '<button class="btn" style="width:100%;background:#BA7517;color:#fff;" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
-  '</div>' : '';
-  '<div class="section-title">Laisser un avis</div>' +
-  '<div class="avis-form">' +
-    '<div class="note-input" id="noteInput">' +
-      '★★★★★'.split('').map((s, i) =>
-        `<span class="star" data-note="${i+1}" onclick="noterAvis(${i+1})">★</span>`
-      ).join('') +
-    '</div>' +
-    '<textarea id="avisCommentaire" placeholder="Votre commentaire..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;font-size:13px;" rows="3"></textarea>' +
-    '<button class="btn" style="width:100%;background:#BA7517;color:#fff;" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
-  '</div>' : '';
+   
     const footerHTML = '<div class="detail-footer">' +
         '<button class="btn-favori" onclick="this.classList.toggle(\'actif\'); this.textContent=this.classList.contains(\'actif\')?\'❤️\':\'🤍\'">🤍</button>' +
         '<button class="btn" onclick="contacterProprio(\'' + a.id + '\', \'' + (a.proprio_prenom || '').replace(/'/g, "\\'") + '\', \'' + (a.titre || a.categorie).replace(/'/g, "\\'") + '\')" ' + (a.statut !== 'disponible' ? 'disabled' : '') + '>' +
@@ -1089,7 +1077,7 @@ async function ouvrirDetail(id) {
         '</button>' +
       '</div>';
     
-    wrap.innerHTML = '<div class="modal-detail-scroll">' + scrollHTML + '</div>' + footerHTML;
+   wrap.innerHTML = '<div class="modal-detail-scroll">' + scrollHTML + avisFormHTML + '</div>' + footerHTML;
   } catch (err) {
     wrap.innerHTML = '<div style="padding:30px;"><div class="alert alert-error">' + err.message + '</div><button class="btn" onclick="fermerModal(\'modal-detail\')">Fermer</button></div>';
   }
