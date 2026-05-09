@@ -1021,6 +1021,7 @@ async function ouvrirDetail(id) {
     const scrollHTML = heroHTML +
       '<div class="btn-back" onclick="fermerModal(\'modal-detail\')">←</div>' +
       '<div class="btn-share" onclick="partagerAnnonce(\'' + a.id + '\')">↗</div>' +
+'<div class="btn-share" style="right:60px;background:rgba(252,235,235,0.9);" onclick="signalerAnnonce(\'' + a.id + '\')">🚩</div>' +
       '</div>' +
       '<div class="detail-body">' +
         '<div class="detail-row">' +
@@ -1106,7 +1107,20 @@ async function contacterProprio(annonceId, prenomProprio, titreAnnonce) {
     alert('Erreur : ' + err.message);
   }
 }
-
+function signalerAnnonce(id) {
+  if (!currentUser) return alert('Connectez-vous pour signaler.');
+  const motif = prompt('Motif du signalement :\n1. Annonce frauduleuse\n2. Prix incorrect\n3. Photos fausses\n4. Autre\n\nEntrez votre motif :');
+  if (!motif) return;
+  const token = localStorage.getItem('logisbj_token');
+  fetch('https://logisbj-backend.onrender.com/api/annonces/' + id + '/signaler', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ motif })
+  })
+  .then(res => res.json())
+  .then(data => alert(data.message || 'Signalement envoyé. Merci !'))
+  .catch(() => alert('Erreur réseau.'));
+}
 function partagerAnnonce(id) {
   const url = window.location.origin + '/?annonce=' + id;
   if (navigator.share) {
