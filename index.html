@@ -1068,21 +1068,7 @@ async function ouvrirDetail(id) {
     '<textarea id="avisCommentaire" placeholder="Votre commentaire..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;font-size:13px;" rows="3"></textarea>' +
     '<button class="btn" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
   '</div>' : '';
-  '<div class="section-title">Laisser un avis</div>' +
-  '<div style="padding:0 16px 16px;">' +
-    '<div class="note-input" id="noteInput">' +
-      ['1','2','3','4','5'].map(i => '<span class="star" data-note="' + i + '" onclick="noterAvis(' + i + ')">★</span>').join('') +
-    '</div>' +
-    '<textarea id="avisCommentaire" placeholder="Votre commentaire..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;font-size:13px;" rows="3"></textarea>' +
-    '<button class="btn" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
-  '</div>' : '';
-  '<div class="section-title">Laisser un avis</div>' +
-  '<div class="avis-form">' +
-    '<div class="note-input" id="noteInput">' +
-      '★★★★★'.split('').map((s, i) =>
-        `<span class="star" data-note="${i+1}" onclick="noterAvis(${i+1})">★</span>`
-      ).join('') +
-    '</div>' +
+ 
    wrap.innerHTML = '<div class="modal-detail-scroll">' + scrollHTML + avisFormHTML + '</div>' + footerHTML;
     '<button class="btn" style="width:100%;background:#BA7517;color:#fff;" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
   '</div>' : '';
