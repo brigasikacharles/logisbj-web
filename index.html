@@ -1462,7 +1462,7 @@ function ouvrirPaiement(plan) {
   openKkiapayWidget({
     amount: prix,
     api_key: "69fad2ca300befda2896f11f",
-    sandbox: true,
+    sandbox: false,
     email: currentUser.email || "",
     phone: currentUser.telephone || "",
     name: (currentUser.prenom || "") + " " + (currentUser.nom || ""),
