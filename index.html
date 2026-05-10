@@ -1091,6 +1091,63 @@ async function contacterProprio(annonceId, prenomProprio, titreAnnonce) {
     showScreen('connexion');
     return;
   }
+  if (!['chercheur', 'proprietaire', 'agence_pro'].includes(currentUser.abonnement)) {
+    if (!confirm('Abonnement requis pour contacter. Souscrire maintenant ?')) return;
+    fermerModal('modal-detail');
+    ouvrirPaiement();
+    return;
+  }
+  try {
+    const data = await api('/messages/conversations', 'POST', {
+      annonce_id: annonceId,
+      premier_message: 'Bonjour, je suis intéressé(e) par votre annonce.',
+    });
+    fermerModal('modal-detail');
+    ouvrirConversation(data.conversation_id, prenomProprio, titreAnnonce);
+  } catch (err) {
+    alert('Erreur : ' + err.message);
+  }
+}
+
+function ouvrirPaiement(plan) {
+  if (!currentUser) return showScreen('connexion');
+  
+  const plans = {
+    chercheur: { montant: 2000, label: 'Chercheur' },
+    proprietaire: { montant: 5000, label: 'Propriétaire' },
+    agence_pro: { montant: 15000, label: 'Agence Pro' }
+  };
+
+  const planSelectionne = plan || 'proprietaire';
+  const { montant: prix, label } = plans[planSelectionne];
+
+  openKkiapayWidget({
+    amount: prix,
+    api_key: "69fad2ca300befda2896f11f",
+    sandbox: true,
+    email: currentUser.email || "",
+    phone: currentUser.telephone || "",
+    name: (currentUser.prenom || "") + " " + (currentUser.nom || ""),
+    callback: "https://logisbj-web.vercel.app"
+  });
+
+  addSuccessListener(async function(response) {
+    try {
+      await api('/paiements/confirmer-kkiapay', 'POST', {
+        transaction_id: response.transactionId,
+        plan: planSelectionne,
+        montant: prix
+      });
+      currentUser.abonnement = planSelectionne;
+      localStorage.setItem('logisbj_user', JSON.stringify(currentUser));
+      majUI();
+      alert('Paiement reussi ! Abonnement ' + label + ' active.');
+    } catch (err) {
+      alert('Erreur activation abonnement : ' + err.message);
+    }
+  });
+}
+  }
  
   if (!currentUser) return showScreen('connexion');
   
