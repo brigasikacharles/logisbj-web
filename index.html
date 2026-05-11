@@ -981,15 +981,19 @@ async function chargerAnnonces() {
       const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : a.statut === 'indisponible' ? 'Indisponible' : 'En attente';
       const statutBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : a.statut === 'indisponible' ? '#FCEBEB' : '#E6F1FB';
       const statutColor = a.statut === 'disponible' ? '#27500A' : a.statut === 'en_cours' ? '#633806' : a.statut === 'indisponible' ? '#791F1F' : '#0C447C';
+      const accentColor = a.statut === 'disponible' ? '#1D9E75' : a.statut === 'en_cours' ? '#EF9F27' : a.statut === 'indisponible' ? '#E24B4A' : '#378ADD';
+      const avatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : a.statut === 'indisponible' ? '#FCEBEB' : '#E6F1FB';
+      const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : a.statut === 'indisponible' ? '#A32D2D' : '#0C447C';
       return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
-        '<div class="annonce-mini-strip ' + (photo ? 'has-photo' : '') + '"' + (photo ? ' style="background-image:url(' + photo + ')"' : '') + '>' +
-          (photo ? '' : '<div class="annonce-mini-icon">' + ico + '</div>') +
-          (a.verifie ? '<div class="annonce-mini-verifie">✓ Vérifié</div>' : '') +
-        '</div>' +
+        '<div class="annonce-mini-accent" style="background:' + accentColor + '"></div>' +
+        (photo ? '<div class="annonce-mini-strip has-photo" style="background-image:url(' + photo + ')">' + (a.verifie ? '<div class="annonce-mini-verifie">✓ Vérifié</div>' : '') + '</div>' : '') +
         '<div class="annonce-mini-body">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;gap:4px;margin-bottom:4px;">' +
-            '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
-            '<div style="font-size:8px;font-weight:600;padding:2px 5px;border-radius:6px;background:' + statutBg + ';color:' + statutColor + ';">' + statutLabel + '</div>' +
+          '<div class="annonce-mini-top">' +
+            '<div style="display:flex;align-items:center;gap:7px;">' +
+              (photo ? '' : '<div class="annonce-mini-icon" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>') +
+              '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+            '</div>' +
+            '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
           '</div>' +
           '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
           '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
