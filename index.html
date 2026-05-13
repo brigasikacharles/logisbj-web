@@ -128,9 +128,10 @@ h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
 }
 .filtres-scroll {
   display: flex; gap: 6px;
-  flex-wrap: wrap;
-  padding-bottom: 4px;
+  overflow-x: auto; white-space: nowrap;
+  padding-bottom: 4px; scrollbar-width: none;
 }
+.filtres-scroll::-webkit-scrollbar { display: none; }
 .chip {
   flex-shrink: 0; padding: 6px 12px; border-radius: 18px; font-size: 12px;
   background: #F1EFE8; color: #4a4845; border: 0.5px solid #D3D1C7;
