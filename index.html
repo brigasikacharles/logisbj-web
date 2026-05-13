@@ -587,9 +587,31 @@ body.in-conversation .app { padding-bottom: 0; }
         <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
       </div>
     </div>
-    <div class="compteur">
+   <div class="compteur">
       <span id="compteur-text">Chargement...</span>
-      <button class="btn btn-sm btn-secondary" onclick="chargerAnnonces()">↻ Actualiser</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-sm btn-ghost" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
+        <button class="btn btn-sm btn-secondary" onclick="chargerAnnonces()">↻</button>
+      </div>
+    </div>
+    <div id="filtres-avances" style="display:none;background:#fff;border-top:0.5px solid #e8e4dc;padding:12px 14px;">
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <div style="flex:1;">
+          <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:4px;display:block;">Prix min (FCFA)</label>
+          <input type="number" id="filtre-prix-min" placeholder="0" style="margin:0;padding:8px 10px;font-size:12px;" oninput="appliquerFiltresPrix()">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:4px;display:block;">Prix max (FCFA)</label>
+          <input type="number" id="filtre-prix-max" placeholder="500000" style="margin:0;padding:8px 10px;font-size:12px;" oninput="appliquerFiltresPrix()">
+        </div>
+      </div>
+      <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:6px;display:block;">Statut</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <div class="chip active" id="sf-tous" onclick="setFiltreStatut('')">Tous</div>
+        <div class="chip" id="sf-disponible" onclick="setFiltreStatut('disponible')">✓ Disponible</div>
+        <div class="chip" id="sf-en_cours" onclick="setFiltreStatut('en_cours')">⏳ En cours</div>
+        <div class="chip" id="sf-indisponible" onclick="setFiltreStatut('indisponible')">✗ Indisponible</div>
+      </div>
     </div>
     <div id="annonces-list">
       <div class="loading"><span class="spinner"></span> Chargement...</div>
