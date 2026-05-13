@@ -1203,9 +1203,9 @@ async function ouvrirDetail(id) {
     '<button class="btn" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
   '</div>' : '';
  
-   '<button class="btn-favori ' + (isFavori(a.id) ? 'actif' : '') + '" id="btn-favori-' + a.id + '" onclick="basculerFavori(\'' + a.id + '\')">' + (isFavori(a.id) ? '❤️' : '🤍') + '</button>' +
+  
     const footerHTML = '<div class="detail-footer">' +
-        '<button class="btn-favori" onclick="this.classList.toggle(\'actif\'); this.textContent=this.classList.contains(\'actif\')?\'❤️\':\'🤍\'">🤍</button>' +
+       '<button class="btn-favori ' + (isFavori(a.id) ? 'actif' : '') + '" id="btn-favori-' + a.id + '" onclick="basculerFavori(\'' + a.id + '\')">' + (isFavori(a.id) ? '❤️' : '🤍') + '</button>' +
         '<button class="btn" onclick="contacterProprio(\'' + a.id + '\', \'' + (a.proprio_prenom || '').replace(/'/g, "\\'") + '\', \'' + (a.titre || a.categorie).replace(/'/g, "\\'") + '\')" ' + (a.statut !== 'disponible' ? 'disabled' : '') + '>' +
           (a.statut === 'disponible' ? 'Contacter' : 'Non disponible') +
         '</button>' +
