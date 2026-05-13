@@ -991,7 +991,28 @@ function viderRecherche() {
   filtres.recherche = '';
   chargerAnnonces();
 }
+function toggleFiltresAvances() {
+  const panel = document.getElementById('filtres-avances');
+  const btn = document.getElementById('btn-filtres-plus');
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '⚙ Filtres' : '✕ Filtres';
+}
 
+function appliquerFiltresPrix() {
+  filtres.prixMin = parseInt(document.getElementById('filtre-prix-min').value) || 0;
+  filtres.prixMax = parseInt(document.getElementById('filtre-prix-max').value) || 0;
+  chargerAnnonces();
+}
+
+function setFiltreStatut(val) {
+  filtres.statut = val;
+  ['tous','disponible','en_cours','indisponible'].forEach(s => {
+    const el = document.getElementById('sf-' + s);
+    if (el) el.classList.toggle('active', (val === '' ? s === 'tous' : s === val));
+  });
+  chargerAnnonces();
+}
 async function chargerCategories() {
   // UUID réels de tes catégories Neon — utilisés directement pour filtrer côté API
   categories = [
