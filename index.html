@@ -1024,13 +1024,16 @@ async function ouvrirDetail(id) {
     const photos = a.photos || [];
     const equips = a.equipements ? Object.keys(a.equipements).filter(k => a.equipements[k]) : [];
     
+    const detailAccent = a.statut === 'disponible' ? '#1D9E75' : a.statut === 'en_cours' ? '#EF9F27' : a.statut === 'indisponible' ? '#E24B4A' : '#378ADD';
+    const detailAvatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : a.statut === 'indisponible' ? '#FCEBEB' : '#E6F1FB';
+    const detailAvatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : a.statut === 'indisponible' ? '#A32D2D' : '#0C447C';
     let heroHTML = '';
     if (photos.length > 0) {
-      heroHTML = '<div class="detail-hero has-photos"><div class="detail-photos-carousel">' +
+      heroHTML = '<div class="detail-accent" style="background:' + detailAccent + '"></div><div class="detail-hero has-photos"><div class="detail-photos-carousel">' +
         photos.map(p => '<div class="detail-photo" style="background-image:url(' + p + ')"></div>').join('') +
         '</div>';
     } else {
-      heroHTML = '<div class="detail-hero"><div class="detail-icon-large">' + (a.categorie?.charAt(0) || '?') + '</div>';
+      heroHTML = '<div class="detail-accent" style="background:' + detailAccent + '"></div><div class="detail-hero"><div class="detail-icon-large" style="background:' + detailAvatarBg + ';color:' + detailAvatarColor + ';">' + (a.categorie?.charAt(0) || '?') + '</div>';
     }
     
     const scrollHTML = heroHTML +
