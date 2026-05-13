@@ -1583,49 +1583,74 @@ async function majProfil() {
     c.innerHTML = '<div class="alert alert-info">Connectez-vous d\'abord.</div>';
     return;
   }
-  
+
   const initiales = ((currentUser.prenom?.[0] || '') + (currentUser.nom?.[0] || '')).toUpperCase();
+  const planLabels = { gratuit: 'Gratuit', chercheur: 'Chercheur', proprietaire: 'Propriétaire', agence_pro: 'Agence Pro' };
+  const planColors = { gratuit: '#888780', chercheur: '#0C447C', proprietaire: '#854F0B', agence_pro: '#3B6D11' };
+  const planBg = { gratuit: '#F1EFE8', chercheur: '#E6F1FB', proprietaire: '#FAEEDA', agence_pro: '#EAF3DE' };
+  const abo = currentUser.abonnement || 'gratuit';
+  const planAvantages = {
+    gratuit: ['Consulter les annonces', 'Voir les prix et localisations'],
+    chercheur: ['Contacter les propriétaires', 'Accès aux coordonnées', 'Messagerie illimitée'],
+    proprietaire: ['Publier jusqu\'à 5 annonces', 'Contacter les chercheurs', 'Statistiques de vues'],
+    agence_pro: ['Annonces illimitées', 'Badge agence vérifiée', 'Support prioritaire'],
+  };
+
   let stats = '';
-  
   if (currentUser.role === 'admin') {
     try {
       const data = await api('/admin/stats');
-      stats = '<div class="card"><h3>📊 Stats globales (admin)</h3>' +
-        '<div style="font-size:12px;line-height:1.7;">' +
-          '<div>👥 ' + data.users.total + ' utilisateur(s)</div>' +
-          '<div>🏠 ' + data.annonces.publiees + ' annonce(s) publiée(s) · ' + data.annonces.en_attente + ' en attente</div>' +
-          '<div>💰 ' + parseInt(data.revenus.total_cumule).toLocaleString() + ' FCFA cumulés</div>' +
-          '<div>⚖️ ' + data.avis_en_attente + ' avis à modérer</div>' +
+      stats = '<div class="card" style="background:#1a1814;color:#fff;">' +
+        '<div style="font-size:11px;font-weight:700;color:#BA7517;margin-bottom:10px;letter-spacing:0.5px;">TABLEAU DE BORD ADMIN</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+          '<div style="background:rgba(255,255,255,0.08);padding:10px;border-radius:10px;"><div style="font-size:20px;font-weight:700;">' + data.users.total + '</div><div style="font-size:10px;color:#B4B2A9;">Utilisateurs</div></div>' +
+          '<div style="background:rgba(255,255,255,0.08);padding:10px;border-radius:10px;"><div style="font-size:20px;font-weight:700;">' + data.annonces.publiees + '</div><div style="font-size:10px;color:#B4B2A9;">Annonces actives</div></div>' +
+          '<div style="background:rgba(255,255,255,0.08);padding:10px;border-radius:10px;"><div style="font-size:20px;font-weight:700;">' + data.annonces.en_attente + '</div><div style="font-size:10px;color:#B4B2A9;">En attente</div></div>' +
+          '<div style="background:rgba(255,255,255,0.08);padding:10px;border-radius:10px;"><div style="font-size:14px;font-weight:700;">' + parseInt(data.revenus.total_cumule).toLocaleString() + '</div><div style="font-size:10px;color:#B4B2A9;">FCFA cumulés</div></div>' +
         '</div></div>';
     } catch {}
   }
-  
-  c.innerHTML = 
-    '<div class="card" style="display:flex;gap:12px;align-items:center;">' +
-      '<div style="width:60px;height:60px;border-radius:30px;background:#BA7517;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;">' + initiales + '</div>' +
-      '<div>' +
-        '<div style="font-size:16px;font-weight:700;">' + currentUser.prenom + ' ' + currentUser.nom + '</div>' +
-        '<div style="font-size:12px;color:#6b6560;">' + currentUser.telephone + '</div>' +
-        '<div style="display:flex;gap:6px;margin-top:6px;">' +
-          '<span class="statut-badge statut-disponible">' + currentUser.role + '</span>' +
-          '<span class="statut-badge statut-en_attente">' + (currentUser.abonnement || 'gratuit') + '</span>' +
-        '</div>' +
+
+  c.innerHTML =
+    '<div style="background:#BA7517;border-radius:14px;padding:20px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">' +
+      '<div style="width:56px;height:56px;border-radius:28px;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;">' + initiales + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:17px;font-weight:700;color:#fff;">' + currentUser.prenom + ' ' + currentUser.nom + '</div>' +
+        '<div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;">' + currentUser.telephone + '</div>' +
+        '<div style="margin-top:8px;display:inline-block;background:rgba(255,255,255,0.2);color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;">' + currentUser.role + '</div>' +
       '</div>' +
     '</div>' +
     stats +
     '<div class="card">' +
-      '<h3>Abonnement</h3>' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-        '<div>' +
-          '<div style="font-size:16px;font-weight:700;color:#BA7517;">' + (currentUser.abonnement || 'gratuit') + '</div>' +
-          (currentUser.abo_expire_le ? '<div style="font-size:11px;color:#B4B2A9;">Expire le ' + new Date(currentUser.abo_expire_le).toLocaleDateString('fr-FR') + '</div>' : '') +
-        '</div>' +
-        '<button class="btn btn-sm" onclick="ouvrirPaiement()">Changer</button>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">' +
+        '<div style="font-size:13px;font-weight:700;">Abonnement actuel</div>' +
+        '<div style="background:' + planBg[abo] + ';color:' + planColors[abo] + ';padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">' + planLabels[abo] + '</div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">' +
+        (planAvantages[abo] || []).map(a => '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#4a4845;"><div style="width:16px;height:16px;border-radius:50%;background:#EAF3DE;color:#3B6D11;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;">✓</div>' + a + '</div>').join('') +
+      '</div>' +
+      (currentUser.abo_expire_le ? '<div style="font-size:11px;color:#B4B2A9;margin-bottom:10px;">Expire le ' + new Date(currentUser.abo_expire_le).toLocaleDateString('fr-FR') + '</div>' : '') +
+      '<button class="btn btn-secondary" onclick="ouvrirPaiement()">Changer de plan →</button>' +
+    '</div>' +
+    '<div class="card" style="padding:0;overflow:hidden;">' +
+      '<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:0.5px solid #e8e4dc;cursor:pointer;" onclick="showScreen(\'annonces\')">' +
+        '<div style="width:34px;height:34px;border-radius:10px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;font-size:16px;">🏠</div>' +
+        '<div style="flex:1;font-size:13px;font-weight:600;">Voir les annonces</div>' +
+        '<div style="color:#B4B2A9;font-size:16px;">›</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:0.5px solid #e8e4dc;cursor:pointer;" onclick="showScreen(\'messages\')">' +
+        '<div style="width:34px;height:34px;border-radius:10px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:16px;">💬</div>' +
+        '<div style="flex:1;font-size:13px;font-weight:600;">Mes messages</div>' +
+        '<div style="color:#B4B2A9;font-size:16px;">›</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;" onclick="alert(\'Support : +229 97 00 00 00\')">' +
+        '<div style="width:34px;height:34px;border-radius:10px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:16px;">🎧</div>' +
+        '<div style="flex:1;font-size:13px;font-weight:600;">Aide & Support</div>' +
+        '<div style="color:#B4B2A9;font-size:16px;">›</div>' +
       '</div>' +
     '</div>' +
-    '<button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:14px;">Se déconnecter</button>';
+    '<button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:10px;">Se déconnecter</button>';
 }
-
 // ============================================
 // MODAL HELPERS
 // ============================================
