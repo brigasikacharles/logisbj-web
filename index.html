@@ -579,6 +579,13 @@ body.in-conversation .app { padding-bottom: 0; }
       <div class="filtres-scroll" id="filtres-villes"></div>
       <div class="filtres-scroll" style="margin-top:6px;" id="filtres-categories"></div>
     </div>
+    <div style="padding:8px 14px;">
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #e8e4dc;border-radius:12px;padding:8px 12px;">
+        <span style="font-size:16px;color:#B4B2A9;">🔍</span>
+        <input type="text" id="search-input" placeholder="Rechercher une annonce..." style="border:0;margin:0;padding:0;font-size:13px;background:transparent;outline:none;width:100%;" oninput="rechercherAnnonces(this.value)">
+        <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
+      </div>
+    </div>
     <div class="compteur">
       <span id="compteur-text">Chargement...</span>
       <button class="btn btn-sm btn-secondary" onclick="chargerAnnonces()">↻ Actualiser</button>
