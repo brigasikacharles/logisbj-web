@@ -955,6 +955,20 @@ function setFiltre(key, val) {
   chargerAnnonces();
 }
 
+function rechercherAnnonces(val) {
+  const clear = document.getElementById('search-clear');
+  if (clear) clear.style.display = val.length > 0 ? 'block' : 'none';
+  filtres.recherche = val.toLowerCase().trim();
+  chargerAnnonces();
+}
+
+function viderRecherche() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  filtres.recherche = '';
+  chargerAnnonces();
+}
+
 async function chargerCategories() {
   // UUID réels de tes catégories Neon — utilisés directement pour filtrer côté API
   categories = [
