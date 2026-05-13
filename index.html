@@ -1049,7 +1049,9 @@ async function chargerAnnonces() {
         (a.description || '').toLowerCase().includes(q)
       );
     }
-
+if (filtres.prixMin > 0) annonces = annonces.filter(a => a.prix >= filtres.prixMin);
+    if (filtres.prixMax > 0) annonces = annonces.filter(a => a.prix <= filtres.prixMax);
+    if (filtres.statut) annonces = annonces.filter(a => a.statut === filtres.statut);
     compteur.textContent = annonces.length + ' offre' + (annonces.length > 1 ? 's' : '') + ' vérifiée' + (annonces.length > 1 ? 's' : '');
 
     if (annonces.length === 0) {
