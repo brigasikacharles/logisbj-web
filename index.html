@@ -1015,6 +1015,38 @@ function setFiltreStatut(val) {
   });
   chargerAnnonces();
 }
+  function getFavoris() {
+  return JSON.parse(localStorage.getItem('logisbj_favoris') || '[]');
+}
+
+function toggleFavori(id) {
+  let favs = getFavoris();
+  const idx = favs.indexOf(id);
+  if (idx === -1) { favs.push(id); }
+  else { favs.splice(idx, 1); }
+  localStorage.setItem('logisbj_favoris', JSON.stringify(favs));
+  return idx === -1;
+}
+function basculerFavori(id) {
+  const ajoute = toggleFavori(id);
+  const btn = document.getElementById('btn-favori-' + id);
+  if (btn) {
+    btn.textContent = ajoute ? '❤️' : '🤍';
+    btn.classList.toggle('actif', ajoute);
+  }
+  showToast(ajoute ? 'Ajouté aux favoris ❤️' : 'Retiré des favoris');
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1814;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:999;white-space:nowrap;';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+function isFavori(id) {
+  return getFavoris().includes(id);
+}
 async function chargerCategories() {
   // UUID réels de tes catégories Neon — utilisés directement pour filtrer côté API
   categories = [
@@ -1171,7 +1203,7 @@ async function ouvrirDetail(id) {
     '<button class="btn" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
   '</div>' : '';
  
-   
+   '<button class="btn-favori ' + (isFavori(a.id) ? 'actif' : '') + '" id="btn-favori-' + a.id + '" onclick="basculerFavori(\'' + a.id + '\')">' + (isFavori(a.id) ? '❤️' : '🤍') + '</button>' +
     const footerHTML = '<div class="detail-footer">' +
         '<button class="btn-favori" onclick="this.classList.toggle(\'actif\'); this.textContent=this.classList.contains(\'actif\')?\'❤️\':\'🤍\'">🤍</button>' +
         '<button class="btn" onclick="contacterProprio(\'' + a.id + '\', \'' + (a.proprio_prenom || '').replace(/'/g, "\\'") + '\', \'' + (a.titre || a.categorie).replace(/'/g, "\\'") + '\')" ' + (a.statut !== 'disponible' ? 'disabled' : '') + '>' +
