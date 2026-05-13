@@ -989,17 +989,31 @@ async function chargerAnnonces() {
   try {
     const params = new URLSearchParams();
     if (filtres.ville) params.append('ville', filtres.ville);
-    if (filtres.categorie) params.append('categorie_id', filtres.categorie);
+   
     const data = await api('/annonces?' + params.toString());
     
     compteur.textContent = data.pagination.total + ' offre' + (data.pagination.total > 1 ? 's' : '') + ' vérifiée' + (data.pagination.total > 1 ? 's' : '');
     
-    if (data.annonces.length === 0) {
-      list.innerHTML = '<div class="empty"><div class="empty-emoji">📦</div><div style="font-weight:600;margin-bottom:6px;">Aucune annonce avec ces filtres</div><div style="font-size:12px;">Essayez d\'\u00e9largir votre recherche</div></div>';
+   let annonces = data.annonces;
+    if (filtres.recherche) {
+      const q = filtres.recherche;
+      annonces = annonces.filter(a =>
+        (a.categorie || '').toLowerCase().includes(q) ||
+        (a.titre || '').toLowerCase().includes(q) ||
+        (a.quartier || '').toLowerCase().includes(q) ||
+        (a.ville || '').toLowerCase().includes(q) ||
+        (a.description || '').toLowerCase().includes(q)
+      );
+    }
+
+    compteur.textContent = annonces.length + ' offre' + (annonces.length > 1 ? 's' : '') + ' vérifiée' + (annonces.length > 1 ? 's' : '');
+
+    if (annonces.length === 0) {
+      list.innerHTML = '<div class="empty"><div class="empty-emoji">🔍</div><div style="font-weight:600;margin-bottom:6px;">Aucun résultat</div><div style="font-size:12px;">Essayez un autre mot-clé</div></div>';
       return;
     }
-    
-    list.innerHTML = '<div class="annonces-grid">' + data.annonces.map(a => {
+
+    list.innerHTML = '<div class="annonces-grid">' + annonces.map(a => {
       const photo = (a.photos && a.photos.length > 0) ? a.photos[0] : null;
       const ico = a.icone || a.categorie?.charAt(0)?.toUpperCase() || '?';
       const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : a.statut === 'indisponible' ? 'Indisponible' : 'En attente';
