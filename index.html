@@ -999,10 +999,12 @@ function toggleFiltresAvances() {
   btn.textContent = visible ? '⚙ Filtres' : '✕ Filtres';
 }
 
+let prixTimeout = null;
 function appliquerFiltresPrix() {
   filtres.prixMin = parseInt(document.getElementById('filtre-prix-min').value) || 0;
   filtres.prixMax = parseInt(document.getElementById('filtre-prix-max').value) || 0;
-  chargerAnnonces();
+  clearTimeout(prixTimeout);
+  prixTimeout = setTimeout(() => chargerAnnonces(), 600);
 }
 
 function setFiltreStatut(val) {
