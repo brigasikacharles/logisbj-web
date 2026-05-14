@@ -526,9 +526,45 @@ function initSocket() {
   socket = io(API_BASE, { auth: { token }, transports: ['websocket', 'polling'] });
   socket.on('connect', () => { socket.emit('rejoindre:conversations'); });
   socket.on('message:recu', (msg) => {
-    if (currentConvId === msg.conversation_id) { ajouterMsgUI(msg); socket.emit('messages:lus', { conversation_id: msg.conversation_id }); }
-    else { majBadgeMessages(); }
+    if (currentConvId === msg.conversation_id) {
+      ajouterMsgUI(msg);
+      socket.emit('messages:lus', { conversation_id: msg.conversation_id });
+    } else {
+      majBadgeMessages();
+      notifierMessage(msg);
+    }
   });
+  socket.on('nouvelle:annonce', (annonce) => {
+    notifierNouvelleAnnonce(annonce);
+  });
+}
+
+function notifierMessage(msg) {
+  if (Notification.permission === 'granted') {
+    new Notification('💬 Nouveau message — LogisBJ', {
+      body: msg.contenu || 'Vous avez reçu un message',
+      icon: '/icon.svg'
+    });
+  } else {
+    showToast('💬 Nouveau message reçu');
+  }
+}
+
+function notifierNouvelleAnnonce(annonce) {
+  const msg = '🏠 Nouvelle annonce : ' + (annonce.categorie || '') + ' à ' + (annonce.ville || '');
+  if (Notification.permission === 'granted') {
+    new Notification('LogisBJ — Nouvelle annonce', { body: msg, icon: '/icon.svg' });
+  } else {
+    showToast(msg);
+  }
+}
+
+async function demanderPermissionNotifications() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') showToast('✅ Notifications activées');
+  }
 }
 
 function renderFiltres() {
@@ -1093,7 +1129,8 @@ async function majProfil() {
         '<div style="flex:1;font-size:13px;font-weight:600;">Aide & Support</div><div style="color:#B4B2A9;font-size:16px;">›</div>' +
       '</div>' +
     '</div>' +
-    '<button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:10px;">Se déconnecter</button>';
+    '<button class="btn btn-secondary" onclick="demanderPermissionNotifications()" style="margin-bottom:8px;">🔔 Activer les notifications</button>' +
+    '<button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:2px;">Se déconnecter</button>';
 }
 
 function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
