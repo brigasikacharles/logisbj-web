@@ -642,7 +642,44 @@ function toggleFavori(id) {
 }
 
 function isFavori(id) { return getFavoris().includes(id); }
+function ajouterHistorique(annonce) {
+  let historique = JSON.parse(localStorage.getItem('logisbj_historique') || '[]');
+  historique = historique.filter(a => a.id !== annonce.id);
+  historique.unshift({ id: annonce.id, categorie: annonce.categorie, prix: annonce.prix, quartier: annonce.quartier, ville: annonce.ville, statut: annonce.statut });
+  if (historique.length > 10) historique = historique.slice(0, 10);
+  localStorage.setItem('logisbj_historique', JSON.stringify(historique));
+}
 
+function getHistorique() {
+  return JSON.parse(localStorage.getItem('logisbj_historique') || '[]');
+}
+
+function afficherHistorique() {
+  const hist = getHistorique();
+  const c = document.getElementById('profil-content');
+  if (hist.length === 0) { showToast('Aucune consultation récente'); return; }
+  c.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div onclick="majProfil()" style="cursor:pointer;font-size:20px;">←</div><h2 style="margin:0;">Récemment consultés</h2></div>' +
+    '<div class="annonces-grid">' +
+    hist.map(a => {
+      const accentColor = a.statut === 'disponible' ? '#1D9E75' : a.statut === 'en_cours' ? '#EF9F27' : '#E24B4A';
+      const avatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : '#FCEBEB';
+      const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : '#A32D2D';
+      const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : 'Indisponible';
+      return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
+        '<div class="annonce-mini-accent" style="background:' + accentColor + '"></div>' +
+        '<div class="annonce-mini-body">' +
+          '<div class="annonce-mini-top">' +
+            '<div style="display:flex;align-items:center;gap:7px;">' +
+              '<div class="annonce-mini-icon" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + (a.categorie?.charAt(0) || '?') + '</div>' +
+              '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+            '</div>' +
+            '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
+          '</div>' +
+          '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
+          '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
+        '</div></div>';
+    }).join('') + '</div>';
+}
 function basculerFavori(id) {
   const ajoute = toggleFavori(id);
   const btn = document.getElementById('btn-favori-' + id);
