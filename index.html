@@ -1370,19 +1370,40 @@ async function chargerMarqueurs(ville) {
   } catch (err) { console.error(err); }
 }
 
-async function afficherFavoris() {
+function afficherFicheCarte(a) {
   const fiche = document.getElementById('carte-fiche');
-  document.getElementById('carte-fiche-content').innerHTML = 
-    '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
-      '<div style="font-weight:700;">' + a.categorie + '</div>' +
-      '<div class="statut-badge statut-' + a.statut + '">' + a.statut + '</div>' +
-    '</div>' +
-    '<div style="font-size:18px;font-weight:700;color:#BA7517;margin-bottom:4px;">' + a.prix.toLocaleString() + ' <span style="font-size:11px;font-weight:400;color:#6b6560;">FCFA/mois</span></div>' +
-    '<div style="font-size:12px;color:#6b6560;margin-bottom:10px;">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
-    '<button class="btn btn-sm" onclick="document.getElementById(\'carte-fiche\').classList.remove(\'active\'); ouvrirDetail(\'' + a.id + '\')">Voir l\'annonce →</button>';
-  fiche.classList.add('active');
+  document.getElementById('carte-fiche-content').
+    async function afficherFavoris() {
+  const favs = getFavoris();
+  const c = document.getElementById('profil-content');
+  if (favs.length === 0) { showToast('Aucun favori sauvegardé'); return; }
+  c.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div onclick="majProfil()" style="cursor:pointer;font-size:20px;">←</div><h2 style="margin:0;">Mes favoris</h2></div><div class="loading"><span class="spinner"></span> Chargement...</div>';
+  try {
+    const results = await Promise.all(favs.map(id => api('/annonces/' + id)));
+    c.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div onclick="majProfil()" style="cursor:pointer;font-size:20px;">←</div><h2 style="margin:0;">Mes favoris (' + favs.length + ')</h2></div><div class="annonces-grid">' +
+      results.map(data => {
+        const a = data.annonce;
+        const accentColor = a.statut === 'disponible' ? '#1D9E75' : a.statut === 'en_cours' ? '#EF9F27' : '#E24B4A';
+        const avatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : '#FCEBEB';
+        const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : '#A32D2D';
+        const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : 'Indisponible';
+        const ico = a.categorie?.charAt(0)?.toUpperCase() || '?';
+        return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
+          '<div class="annonce-mini-accent" style="background:' + accentColor + '"></div>' +
+          '<div class="annonce-mini-body">' +
+            '<div class="annonce-mini-top">' +
+              '<div style="display:flex;align-items:center;gap:7px;">' +
+                '<div class="annonce-mini-icon" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>' +
+                '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+              '</div>' +
+              '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
+            '</div>' +
+            '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
+            '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
+          '</div></div>';
+      }).join('') + '</div>';
+  } catch(err) { showToast('Erreur chargement favoris'); }
 }
-
 // ============================================
 // MESSAGES
 // ============================================
@@ -1810,6 +1831,7 @@ async function majProfil() {
       '</div>' +
     '</div>' +
     '<button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:10px;">Se déconnecter</button>';
+  }
 // ============================================
 // MODAL HELPERS
 // ============================================
