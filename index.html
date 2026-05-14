@@ -1044,10 +1044,40 @@ function showToast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2500);
 }
-    { id: 'eedbb309-1a92-4688-b81c-ad2d40834140', nom: 'Atelier à louer' },
-  ];
+
+async function afficherFavoris() {
+  const favs = getFavoris();
+  const c = document.getElementById('profil-content');
+  if (favs.length === 0) { showToast('Aucun favori sauvegardé'); return; }
+  c.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div onclick="majProfil()" style="cursor:pointer;font-size:20px;">←</div><h2 style="margin:0;">Mes favoris</h2></div><div class="loading"><span class="spinner"></span> Chargement...</div>';
+  try {
+    const results = await Promise.all(favs.map(id => api('/annonces/' + id)));
+    c.innerHTML = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div onclick="majProfil()" style="cursor:pointer;font-size:20px;">←</div><h2 style="margin:0;">Mes favoris (' + favs.length + ')</h2></div><div class="annonces-grid">' +
+      results.map(data => {
+        const a = data.annonce;
+        const accentColor = a.statut === 'disponible' ? '#1D9E75' : a.statut === 'en_cours' ? '#EF9F27' : '#E24B4A';
+        const avatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : '#FCEBEB';
+        const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : '#A32D2D';
+        const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : 'Indisponible';
+        const ico = a.categorie?.charAt(0)?.toUpperCase() || '?';
+        return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
+          '<div class="annonce-mini-accent" style="background:' + accentColor + '"></div>' +
+          '<div class="annonce-mini-body">' +
+            '<div class="annonce-mini-top">' +
+              '<div style="display:flex;align-items:center;gap:7px;">' +
+                '<div class="annonce-mini-icon" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>' +
+                '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+              '</div>' +
+              '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
+            '</div>' +
+            '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
+            '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
+          '</div></div>';
+      }).join('') + '</div>';
+  } catch(err) { showToast('Erreur chargement favoris'); }
 }
-async function chargerAnnonces() {
+
+async function chargerCategories() {
   const list = document.getElementById('annonces-list');
   const compteur = document.getElementById('compteur-text');
   list.innerHTML = '<div class="loading"><span class="spinner"></span> Chargement...</div>';
@@ -1322,7 +1352,7 @@ async function chargerMarqueurs(ville) {
 function afficherFicheCarte(a) {
   const fiche = document.getElementById('carte-fiche');
   document.getElementById('carte-fiche-content').
-    async function afficherFavoris() {
+   function afficherFicheCarte(a) {
   const favs = getFavoris();
   const c = document.getElementById('profil-content');
   if (favs.length === 0) { showToast('Aucun favori sauvegardé'); return; }
