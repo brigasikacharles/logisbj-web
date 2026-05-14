@@ -1194,7 +1194,7 @@ function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
 
 async function init() {
   await pingAPI();
-  setInterval(pingAPI, 30000);
+  setInterval(pingAPI, 14 * 60 * 1000);
   await chargerCategories();
   renderFiltres();
   majUI();
