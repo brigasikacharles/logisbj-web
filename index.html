@@ -1205,7 +1205,7 @@ async function activerNotifications() {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return;
     const token = await getToken(messaging, {
-      vapidKey: 'BI_bh-ZclhSeD4lQF9OWvMvdusEfwJZHpd8KLr9kcSdy2tTqtuQloJNB52-Vx5-t946IWOMrCHWAVf1nOoP4C3s',
+     vapidKey: 'ozawhmOVP8-cNW1mdWrYz1Mpm5EUc6vKzU3sSVuX3Hs',
       serviceWorkerRegistration: await navigator.serviceWorker.register('/firebase-messaging-sw.js')
     });
     if (token) {
