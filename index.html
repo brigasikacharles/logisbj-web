@@ -792,7 +792,7 @@ async function ouvrirDetail(id) {
   wrap.innerHTML = '<div class="modal-detail-scroll"><div class="loading"><span class="spinner"></span> Chargement...</div></div>';
   try {
     const data = await api('/annonces/' + id);
-    const a = data.annonce;
+    const a = data.annonce;ajouterHistorique(a);
     const avis = data.avis || [];
     const photos = a.photos || [];
     const equips = a.equipements ? Object.keys(a.equipements).filter(k => a.equipements[k]) : [];
@@ -1175,6 +1175,11 @@ async function majProfil() {
       '<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:0.5px solid #e8e4dc;cursor:pointer;" onclick="showScreen(\'messages\')">' +
         '<div style="width:34px;height:34px;border-radius:10px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:16px;">💬</div>' +
         '<div style="flex:1;font-size:13px;font-weight:600;">Mes messages</div><div style="color:#B4B2A9;font-size:16px;">›</div>' +
+      '</div>' +
+    '<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:0.5px solid #e8e4dc;cursor:pointer;" onclick="afficherHistorique()">' +
+        '<div style="width:34px;height:34px;border-radius:10px;background:#F1EFE8;display:flex;align-items:center;justify-content:center;font-size:16px;">🕐</div>' +
+        '<div style="flex:1;font-size:13px;font-weight:600;">Récemment consultés <span style="background:#888780;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">' + getHistorique().length + '</span></div>' +
+        '<div style="color:#B4B2A9;font-size:16px;">›</div>' +
       '</div>' +
       '<div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;" onclick="alert(\'Support : +229 97 00 00 00\')">' +
         '<div style="width:34px;height:34px;border-radius:10px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:16px;">🎧</div>' +
