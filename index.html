@@ -212,7 +212,27 @@ body.in-conversation .app { padding-bottom: 0; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .modal-close { font-size: 22px; cursor: pointer; }
-</style>
+  @media (min-width: 768px) {
+  body { background: #F0EDE6; }
+  .app { max-width: 100% !important; padding-bottom: 0 !important; }
+  .header { position: fixed; top: 0; left: 0; right: 0; padding: 12px 32px; z-index: 100; }
+ .bottom-nav { position: fixed !important; left: 0 !important; top: 58px !important; bottom: auto !important; width: 220px !important; max-width: 220px !important; height: calc(100vh - 58px) !important; flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; border-top: none !important; border-right: 0.5px solid #e8e4dc !important; transform: none !important; padding: 16px 0 !important; overflow-y: auto !important; }
+  .bottom-nav .tab { flex: 0 0 auto; flex-direction: row; justify-content: flex-start; gap: 12px; padding: 12px 20px; margin: 2px 10px; border-radius: 10px; width: auto; }
+  .bottom-nav .tab .ico { font-size: 20px; opacity: 0.7; }
+  .bottom-nav .tab .lbl { font-size: 13px; font-weight: 500; display: block; }
+  .bottom-nav .tab.active { background: #FAEEDA; }
+  .bottom-nav .tab.active .ico { opacity: 1; }
+  .bottom-nav .tab .pill { position: static; margin-left: auto; }
+  .screen { margin-left: 220px; margin-top: 58px; padding: 24px 32px; min-height: calc(100vh - 58px); }
+  #screen-annonces { padding: 0; }
+  .filtres-bar { top: 58px; }
+  .annonces-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); padding: 0 24px; }
+  #screen-conversation { margin-left: 220px; margin-top: 58px; }
+  .conv-input { left: 220px; max-width: calc(100% - 220px); }
+  .modal-overlay { align-items: center; }
+  .modal { border-radius: 18px; max-width: 500px; }
+  .modal-detail-wrap { border-radius: 18px; max-width: 600px; max-height: 90vh; }
+}</style>
 <script src="https://cdn.kkiapay.me/k.js"></script>
 </head>
 <body>
@@ -1284,27 +1304,7 @@ onMessage(messaging, (payload) => {
   new Notification(title, { body, icon: '/icon-192.png' });
 });
 window.addEventListener('load', () => { setTimeout(activerNotifications, 3000); });
-  @media (min-width: 768px) {
-  body { background: #F0EDE6; }
-  .app { max-width: 100% !important; padding-bottom: 0 !important; }
-  .header { position: fixed; top: 0; left: 0; right: 0; padding: 12px 32px; z-index: 100; }
- .bottom-nav { position: fixed !important; left: 0 !important; top: 58px !important; bottom: auto !important; width: 220px !important; max-width: 220px !important; height: calc(100vh - 58px) !important; flex-direction: column !important; justify-content: flex-start !important; align-items: stretch !important; border-top: none !important; border-right: 0.5px solid #e8e4dc !important; transform: none !important; padding: 16px 0 !important; overflow-y: auto !important; }
-  .bottom-nav .tab { flex: 0 0 auto; flex-direction: row; justify-content: flex-start; gap: 12px; padding: 12px 20px; margin: 2px 10px; border-radius: 10px; width: auto; }
-  .bottom-nav .tab .ico { font-size: 20px; opacity: 0.7; }
-  .bottom-nav .tab .lbl { font-size: 13px; font-weight: 500; display: block; }
-  .bottom-nav .tab.active { background: #FAEEDA; }
-  .bottom-nav .tab.active .ico { opacity: 1; }
-  .bottom-nav .tab .pill { position: static; margin-left: auto; }
-  .screen { margin-left: 220px; margin-top: 58px; padding: 24px 32px; min-height: calc(100vh - 58px); }
-  #screen-annonces { padding: 0; }
-  .filtres-bar { top: 58px; }
-  .annonces-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); padding: 0 24px; }
-  #screen-conversation { margin-left: 220px; margin-top: 58px; }
-  .conv-input { left: 220px; max-width: calc(100% - 220px); }
-  .modal-overlay { align-items: center; }
-  .modal { border-radius: 18px; max-width: 500px; }
-  .modal-detail-wrap { border-radius: 18px; max-width: 600px; max-height: 90vh; }
-}
+
 </script>
 </body>
 </html>
