@@ -1119,7 +1119,7 @@ function ouvrirPaiement(plan) {
   const plans = { chercheur: { montant: 2000, label: 'Chercheur' }, proprietaire: { montant: 5000, label: 'Propriétaire' }, agence_pro: { montant: 15000, label: 'Agence Pro' } };
   const planSelectionne = plan || 'proprietaire';
   const { montant: prix, label } = plans[planSelectionne];
-  openKkiapayWidget({ amount: prix, api_key: "021d650ca200af466cc181dc67f203727668f586", sandbox: false, email: currentUser.email || "", phone: currentUser.telephone || "", name: (currentUser.prenom || "") + " " + (currentUser.nom || ""), callback: "https://logisbj-web.vercel.app" });
+  openKkiapayWidget({ amount: prix, api_key: "af73694ed79631b4f492041f0602837f1c872739", sandbox: false, email: currentUser.email || "", phone: currentUser.telephone || "", name: (currentUser.prenom || "") + " " + (currentUser.nom || ""), callback: "https://logisbj-web.vercel.app" });
   addSuccessListener(async function(response) {
     try {
       await api('/paiements/confirmer-kkiapay', 'POST', { transaction_id: response.transactionId, plan: planSelectionne, montant: prix });
