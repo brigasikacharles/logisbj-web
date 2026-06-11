@@ -20,8 +20,8 @@
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafaf7; color: #1a1814; font-size: 14px; overflow-x: hidden; }
-.app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fafaf7; padding-bottom: 70px; position: relative; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F7F5F0; color: #1a1814; font-size: 14px; overflow-x: hidden; }
+.app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #F7F5F0; padding-bottom: 70px; position: relative; }
 
 
 .header { background: #fff; padding: 10px 20px; border-bottom: 0.5px solid #e8e4dc; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
@@ -64,27 +64,37 @@ h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
 .statut-en_cours { background: #FAEEDA; color: #633806; }
 .statut-indisponible { background: #FCEBEB; color: #791F1F; }
 .statut-en_attente { background: #E6F1FB; color: #0C447C; }
-.filtres-bar { background: #fff; border-bottom: 0.5px solid #e8e4dc; padding: 10px 14px; position: sticky; top: 49px; z-index: 40; }
+.filtres-bar { background: #fff; border-bottom: 0.5px solid #ede9e0; position: sticky; top: 49px; z-index: 40; padding: 10px 0 0; }
 .filtres-scroll { display: flex; gap: 6px; overflow-x: auto; white-space: nowrap; padding-bottom: 4px; scrollbar-width: none; }
 .filtres-scroll::-webkit-scrollbar { display: none; }
+.filtres-types { display: flex; gap: 6px; overflow-x: auto; white-space: nowrap; padding: 0 14px 8px; scrollbar-width: none; }
+.filtres-types::-webkit-scrollbar { display: none; }
+.type-chip { flex-shrink:0; padding:7px 14px; border-radius:20px; font-size:12px; background:#fff; color:#4a4845; border:0.5px solid #ede9e0; cursor:pointer; white-space:nowrap; font-weight:500; user-select:none; transition:0.15s; }
+.type-chip.active { background:#BA7517; color:#fff; border-color:#BA7517; }
+.view-toggle { display:flex; border:0.5px solid #ede9e0; border-radius:10px; overflow:hidden; }
+.view-btn { padding:8px 11px; background:#fff; border:0; cursor:pointer; font-size:15px; color:#888780; transition:0.15s; font-family:inherit; }
+.view-btn.active { background:#BA7517; color:#fff; }
 .chip { flex-shrink: 0; padding: 6px 12px; border-radius: 18px; font-size: 12px; background: #F1EFE8; color: #4a4845; border: 0.5px solid #D3D1C7; cursor: pointer; white-space: nowrap; font-weight: 500; user-select: none; }
 .chip.active { background: #BA7517; color: #fff; border-color: #BA7517; }
 .compteur { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 12px; color: #6b6560; }
-.annonces-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 14px; }
-.annonce-mini { background: #fff; border-radius: 12px; overflow: hidden; cursor: pointer; border: 0.5px solid #e8e4dc; transition: 0.18s; }
-.annonce-mini:hover { transform: translateY(-2px); border-color: #D3D1C7; }
-.annonce-mini-accent { height: 4px; width: 100%; display: block; }
-.annonce-mini-strip { height: 80px; background: #f5f5f0; display: flex; align-items: center; justify-content: center; position: relative; background-size: cover; background-position: center; }
-.annonce-mini-strip img { width: 100%; height: 100%; object-fit: cover; }
+.annonces-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; padding: 12px 14px 16px; }
+.annonce-mini { background: #fff; border-radius: 14px; overflow: hidden; cursor: pointer; border: 0.5px solid #ede9e0; transition: 0.18s; display: flex; flex-direction: row; min-height: 96px; }
+.annonce-mini:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+.annonce-mini-accent { display: none; }
+.annonce-mini-photo { width: 108px; min-width: 108px; background: #f0ede6; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.annonce-mini-photo-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #FAEEDA; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #BA7517; }
 .annonce-mini-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
-.annonce-mini-verifie { position: absolute; top: 6px; right: 6px; background: rgba(234,243,222,0.95); color: #085041; font-size: 8px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
-.annonce-mini-body { padding: 10px; }
-.annonce-mini-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 4px; }
-.annonce-mini-cat { font-size: 10px; font-weight: 600; color: #4a4845; }
-.annonce-mini-statut { display: inline-block; font-size: 9px !important; font-weight: 600; padding: 2px 6px; border-radius: 10px; flex-shrink: 0; }
-.annonce-mini-prix { font-size: 15px; font-weight: 700; color: #1a1814; margin-bottom: 2px; line-height: 1.2; }
+.annonce-mini-verifie { font-size: 8px; background: #EAF3DE; color: #085041; padding: 2px 5px; border-radius: 4px; font-weight: 600; }
+.annonce-mini-body { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+.annonce-mini-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 4px; }
+.annonce-mini-cat-wrap { display: flex; align-items: center; gap: 6px; }
+.annonce-mini-cat-circle { width: 24px; height: 24px; border-radius: 50%; background: #EAF3DE; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #3B6D11; flex-shrink: 0; }
+.annonce-mini-cat { font-size: 11px; font-weight: 600; color: #4a4845; }
+.annonce-mini-statut { display: inline-block; font-size: 9px !important; font-weight: 600; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; }
+.annonce-mini-prix { font-size: 15px; font-weight: 700; color: #1a1814; margin-bottom: 3px; line-height: 1.2; }
 .annonce-mini-prix .unit { font-size: 9px; color: #6b6560; font-weight: 400; }
-.annonce-mini-lieu { font-size: 10px; color: #6b6560; }
+.annonce-mini-lieu { font-size: 10px; color: #888780; }
+.compteur { display:flex; justify-content:space-between; align-items:center; padding:8px 14px 0; font-size:12px; color:#6b6560; }
 .detail-hero { height: 160px; background: #F1EFE8; display: flex; align-items: center; justify-content: center; position: relative; background-size: cover; background-position: center; }
 .detail-accent { height: 5px; width: 100%; display: block; }
 .detail-hero.has-photos { background: #000; }
@@ -137,7 +147,7 @@ h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
 .conv-header-nom { font-size: 14px; font-weight: 700; }
 .conv-header-annonce { font-size: 11px; color: #6b6560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .conv-warn { background: #FAEEDA; padding: 8px 14px; font-size: 11px; color: #633806; text-align: center; }
-.conv-messages { padding: 14px; background: #fafaf7; min-height: 50vh; }
+.conv-messages { padding: 14px; background: #F7F5F0; min-height: 50vh; }
 .msg-wrap { margin-bottom: 10px; max-width: 78%; clear: both; }
 .msg-wrap.moi { margin-left: auto; }
 .msg-bubble { padding: 10px 14px; border-radius: 14px; word-wrap: break-word; font-size: 14px; line-height: 1.4; }
@@ -225,8 +235,7 @@ body.in-conversation .app { padding-bottom: 0; }
   .bottom-nav .tab .pill { position: static; margin-left: auto; }
   .screen { margin-left: 220px; margin-top: 64px; padding: 24px 32px; min-height: calc(100vh - 58px); }
   #screen-annonces { padding: 0; }
-  .filtres-bar { top: 64px; }
-  .annonces-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); padding: 0 24px; }
+  .annonces-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); padding: 12px 24px 24px; } .filtres-bar { top: 64px; padding: 10px 0 0; }
   #screen-conversation { margin-left: 220px; margin-top: 58px; }
   .conv-input { left: 220px; max-width: calc(100% - 220px); }
   .modal-overlay { align-items: center; z-index: 1000 !important; }#screen-carte { z-index: 1; }
@@ -254,6 +263,8 @@ body.in-conversation .app { padding-bottom: 0; }
     <text x="220" y="82" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="10" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1.5">LOCATION VÉRIFIÉE AU BÉNIN</text>
   </svg>
 </div>
+    <div style="font-size:10px;color:#B4B2A9;margin-top:-4px;padding-left:2px;">Gestion immobilière</div>
+    </div>
     <div style="display:flex;gap:8px;align-items:center;">
       <div id="user-pill" class="user-pill" style="display:none;" onclick="showScreen('profil')"></div>
       <div id="api-status" class="api-status">vérification...</div>
@@ -262,22 +273,25 @@ body.in-conversation .app { padding-bottom: 0; }
 
   <div id="screen-annonces" class="screen active" style="padding:0;">
     <div class="filtres-bar">
-      <div class="filtres-scroll" id="filtres-villes"></div>
-      <div class="filtres-scroll" style="margin-top:6px;" id="filtres-categories"></div>
+      <div class="filtres-types" id="filtres-types"></div>
+      <div class="filtres-scroll" style="padding:0 14px;" id="filtres-villes"></div>
+      <div class="filtres-scroll" style="margin-top:4px;padding:0 14px 8px;" id="filtres-categories"></div>
     </div>
-    <div style="padding:8px 14px;">
-      <div style="display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #e8e4dc;border-radius:12px;padding:8px 12px;">
+    <div style="padding:8px 14px 4px;display:flex;align-items:center;gap:8px;">
+      <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ede9e0;border-radius:12px;padding:8px 12px;">
         <span style="font-size:16px;color:#B4B2A9;">🔍</span>
-        <input type="text" id="search-input" placeholder="Rechercher une annonce..." style="border:0;margin:0;padding:0;font-size:13px;background:transparent;outline:none;width:100%;" oninput="rechercherAnnonces(this.value)">
+        <input type="text" id="search-input" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:13px;background:transparent;outline:none;flex:1;" oninput="rechercherAnnonces(this.value)">
         <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
+      </div>
+      <button style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#fff;border:0.5px solid #ede9e0;border-radius:10px;font-size:12px;font-weight:600;color:#4a4845;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Grille">⊞</button>
+        <button class="view-btn" id="btn-list" onclick="setView('list')" title="Liste">≡</button>
       </div>
     </div>
     <div class="compteur">
       <span id="compteur-text">Chargement...</span>
-      <div style="display:flex;gap:6px;">
-        <button class="btn btn-sm btn-ghost" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
-        <button class="btn btn-sm btn-secondary" onclick="chargerAnnonces()">↻</button>
-      </div>
+      <button class="btn btn-sm btn-secondary" onclick="chargerAnnonces()">↻</button>
     </div>
     <div id="filtres-avances" style="display:none;background:#fff;border-top:0.5px solid #e8e4dc;padding:12px 14px;">
       <div style="display:flex;gap:10px;margin-bottom:10px;">
@@ -621,13 +635,43 @@ async function demanderPermissionNotifications() {
   }
 }
 
+const TYPES_BIENS = ['Tous les biens','Maisons','Appartements','Studios','Bureaux','Espaces à louer','Ateliers & locaux'];
+let filtreType = '';
+let currentView = 'grid';
+
 function renderFiltres() {
+  const typesBar = document.getElementById('filtres-types');
+  if (typesBar) {
+    typesBar.innerHTML = TYPES_BIENS.map(t => {
+      const isActive = (t === 'Tous les biens' && filtreType === '') || filtreType === t;
+      return '<div class="type-chip ' + (isActive ? 'active' : '') + '" onclick="setFiltreType(\'' + t.replace(/'/g,"\\'") + '\')">' + t + '</div>';
+    }).join('');
+  }
   const villesBar = document.getElementById('filtres-villes');
-  villesBar.innerHTML = '<div class="chip ' + (filtres.ville === '' ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'\')">Toutes villes</div>' +
-    VILLES.map(v => '<div class="chip ' + (filtres.ville === v ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'' + v + '\')">' + v + '</div>').join('');
+  villesBar.innerHTML = '<div class="chip ' + (filtres.ville === '' ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'\')" style="flex-shrink:0;">Toutes villes</div>' +
+    VILLES.map(v => '<div class="chip ' + (filtres.ville === v ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'' + v + '\')" style="flex-shrink:0;">' + v + '</div>').join('');
   const catsBar = document.getElementById('filtres-categories');
-  catsBar.innerHTML = '<div class="chip ' + (filtres.categorie === '' ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'\')">Toutes catégories</div>' +
-    categories.map(c => '<div class="chip ' + (filtres.categorie === c.id ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'' + c.id + '\')">' + c.nom + '</div>').join('');
+  catsBar.innerHTML = '<div class="chip ' + (filtres.categorie === '' ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'\')" style="flex-shrink:0;">Toutes catégories</div>' +
+    categories.map(c => '<div class="chip ' + (filtres.categorie === c.id ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'' + c.id + '\')" style="flex-shrink:0;">' + c.nom + '</div>').join('');
+}
+
+function setFiltreType(type) {
+  filtreType = type === 'Tous les biens' ? '' : type;
+  renderFiltres();
+  chargerAnnonces();
+}
+
+function setView(view) {
+  currentView = view;
+  const btnGrid = document.getElementById('btn-grid');
+  const btnList = document.getElementById('btn-list');
+  if (btnGrid) btnGrid.classList.toggle('active', view === 'grid');
+  if (btnList) btnList.classList.toggle('active', view === 'list');
+  const grid = document.getElementById('annonces-list');
+  if (grid) {
+    const g = grid.querySelector('.annonces-grid');
+    if (g) g.style.gridTemplateColumns = view === 'list' ? '1fr' : '';
+  }
 }
 
 function setFiltre(key, val) { filtres[key] = val; renderFiltres(); chargerAnnonces(); }
@@ -704,13 +748,16 @@ function afficherHistorique() {
       const avatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : '#FCEBEB';
       const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : '#A32D2D';
       const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : 'Indisponible';
+      const ico_h = (a.categorie?.charAt(0)?.toUpperCase() || '?');
       return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
-        '<div class="annonce-mini-accent" style="background:' + accentColor + '"></div>' +
+        '<div class="annonce-mini-photo">' +
+          '<div class="annonce-mini-photo-placeholder">' + ico_h + '</div>' +
+        '</div>' +
         '<div class="annonce-mini-body">' +
           '<div class="annonce-mini-top">' +
-            '<div style="display:flex;align-items:center;gap:7px;">' +
-              '<div class="annonce-mini-icon" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + (a.categorie?.charAt(0) || '?') + '</div>' +
-              '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+            '<div class="annonce-mini-cat-wrap">' +
+              '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico_h + '</div>' +
+              '<span class="annonce-mini-cat">' + (a.categorie || '—') + '</span>' +
             '</div>' +
             '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
           '</div>' +
@@ -742,12 +789,14 @@ async function afficherFavoris() {
         const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : 'Indisponible';
         const ico = a.categorie?.charAt(0)?.toUpperCase() || '?';
         return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
-          '<div class="annonce-mini-accent" style="background:' + accentColor + '"></div>' +
+          '<div class="annonce-mini-photo">' +
+            '<div class="annonce-mini-photo-placeholder">' + ico + '</div>' +
+          '</div>' +
           '<div class="annonce-mini-body">' +
             '<div class="annonce-mini-top">' +
-              '<div style="display:flex;align-items:center;gap:7px;">' +
-                '<div class="annonce-mini-icon" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>' +
-                '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+              '<div class="annonce-mini-cat-wrap">' +
+                '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>' +
+                '<span class="annonce-mini-cat">' + (a.categorie || '—') + '</span>' +
               '</div>' +
               '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
             '</div>' +
@@ -802,23 +851,23 @@ async function chargerAnnonces() {
       const photo = (a.photos && a.photos.length > 0) ? a.photos[0] : null;
       const ico = a.icone || a.categorie?.charAt(0)?.toUpperCase() || '?';
       const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : a.statut === 'indisponible' ? 'Indisponible' : 'En attente';
-      const accentColor = a.statut === 'disponible' ? '#1D9E75' : a.statut === 'en_cours' ? '#EF9F27' : a.statut === 'indisponible' ? '#E24B4A' : '#378ADD';
       const avatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : a.statut === 'indisponible' ? '#FCEBEB' : '#E6F1FB';
       const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : a.statut === 'indisponible' ? '#A32D2D' : '#0C447C';
       return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
-        '<div class="annonce-mini-accent" style="background:' + accentColor + '"></div>' +
-        (photo ? '<div class="annonce-mini-strip has-photo" style="background-image:url(' + photo + ')">' + (a.verifie ? '<div class="annonce-mini-verifie">✓ Vérifié</div>' : '') + '</div>' : '') +
+        '<div class="annonce-mini-photo"' + (photo ? ' style="background-image:url(' + photo + ')"' : '') + '>' +
+          (photo ? (a.verifie ? '<div class="annonce-mini-verifie" style="position:absolute;top:6px;right:6px;">✓ Vérifié</div>' : '') : '<div class="annonce-mini-photo-placeholder">' + ico + '</div>') +
+        '</div>' +
         '<div class="annonce-mini-body">' +
           '<div class="annonce-mini-top">' +
-            '<div style="display:flex;align-items:center;gap:7px;">' +
-              (photo ? '' : '<div class="annonce-mini-icon" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>') +
-              '<div class="annonce-mini-cat">' + (a.categorie || '—') + '</div>' +
+            '<div class="annonce-mini-cat-wrap">' +
+              '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>' +
+              '<span class="annonce-mini-cat">' + (a.categorie || '—') + '</span>' +
             '</div>' +
             '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
           '</div>' +
           '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
           '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
-          (a.note_moyenne > 0 ? '<div style="font-size:10px;color:#BA7517;margin-top:3px;">★ ' + a.note_moyenne + ' (' + a.nb_avis + ')</div>' : '') +
+          (a.note_moyenne > 0 ? '<div style="font-size:10px;color:#BA7517;margin-top:2px;">★ ' + a.note_moyenne + '</div>' : '') +
         '</div>' +
       '</div>';
     }).join('') + '</div>';
