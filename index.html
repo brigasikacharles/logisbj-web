@@ -281,8 +281,7 @@ body.in-conversation .app { padding-bottom: 0; }
   <div id="screen-annonces" class="screen active" style="padding:0;">
     <div class="filtres-bar">
       <div class="filtres-types" id="filtres-types"></div>
-      <div class="filtres-scroll" style="padding:0 14px;" id="filtres-villes"></div>
-      <div class="filtres-scroll" style="margin-top:4px;padding:0 14px 8px;" id="filtres-categories"></div>
+      <div class="filtres-scroll" style="padding:4px 14px 8px;" id="filtres-villes-cats"></div>
     </div>
     <div style="padding:8px 14px 4px;display:flex;align-items:center;gap:8px;">
       <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ede9e0;border-radius:12px;padding:8px 12px;">
@@ -657,12 +656,16 @@ function renderFiltres() {
       return '<div class="type-chip ' + (isActive ? 'active' : '') + '" onclick="setFiltreType(\'' + t.replace(/'/g,"\\'") + '\')">' + t + '</div>';
     }).join('');
   }
-  const villesBar = document.getElementById('filtres-villes');
-  villesBar.innerHTML = '<div class="chip ' + (filtres.ville === '' ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'\')" style="flex-shrink:0;">Toutes villes</div>' +
-    VILLES.map(v => '<div class="chip ' + (filtres.ville === v ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'' + v + '\')" style="flex-shrink:0;">' + v + '</div>').join('');
-  const catsBar = document.getElementById('filtres-categories');
-  catsBar.innerHTML = '<div class="chip ' + (filtres.categorie === '' ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'\')" style="flex-shrink:0;">Toutes catégories</div>' +
-    categories.map(c => '<div class="chip ' + (filtres.categorie === c.id ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'' + c.id + '\')" style="flex-shrink:0;">' + c.nom + '</div>').join('');
+  const villesCatsBar = document.getElementById('filtres-villes-cats');
+  if (villesCatsBar) {
+    const sepStyle = 'flex-shrink:0;width:1px;background:#e8e4dc;margin:2px 4px;align-self:stretch;';
+    villesCatsBar.innerHTML =
+      '<div class="chip ' + (filtres.ville === '' ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'\')" style="flex-shrink:0;">Toutes villes</div>' +
+      VILLES.map(v => '<div class="chip ' + (filtres.ville === v ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'' + v + '\')" style="flex-shrink:0;">' + v + '</div>').join('') +
+      '<div style="' + sepStyle + '"></div>' +
+      '<div class="chip ' + (filtres.categorie === '' ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'\')" style="flex-shrink:0;">Toutes catégories</div>' +
+      categories.map(c => '<div class="chip ' + (filtres.categorie === c.id ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'' + c.id + '\')" style="flex-shrink:0;">' + c.nom + '</div>').join('');
+  }
 }
 
 function setFiltreType(type) {
