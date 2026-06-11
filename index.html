@@ -95,6 +95,11 @@ h3 { font-size: 15px; margin-bottom: 10px; color: #4a4845; }
 .annonce-mini-prix .unit { font-size: 9px; color: #6b6560; font-weight: 400; }
 .annonce-mini-lieu { font-size: 10px; color: #888780; }
 .compteur { display:flex; justify-content:space-between; align-items:center; padding:8px 14px 0; font-size:12px; color:#6b6560; }
+.pagination { display:flex; align-items:center; justify-content:center; gap:6px; padding:16px 14px 20px; flex-wrap:wrap; }
+.page-btn { width:34px; height:34px; border-radius:8px; border:0.5px solid #ede9e0; background:#fff; font-size:13px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#4a4845; font-family:inherit; transition:0.15s; }
+.page-btn.active { background:#BA7517; color:#fff; border-color:#BA7517; }
+.page-btn:hover:not(.active):not([disabled]) { background:#F7F5F0; }
+.page-btn.arrow { font-size:18px; color:#888780; }
 .detail-hero { height: 160px; background: #F1EFE8; display: flex; align-items: center; justify-content: center; position: relative; background-size: cover; background-position: center; }
 .detail-accent { height: 5px; width: 100%; display: block; }
 .detail-hero.has-photos { background: #000; }
@@ -640,6 +645,9 @@ async function demanderPermissionNotifications() {
 const TYPES_BIENS = ['Tous les biens','Maisons','Appartements','Studios','Bureaux','Espaces à louer','Ateliers & locaux'];
 let filtreType = '';
 let currentView = 'grid';
+const PAGE_SIZE = 10;
+let currentPage = 1;
+let totalAnnonces = [];
 
 function renderFiltres() {
   const typesBar = document.getElementById('filtres-types');
@@ -659,8 +667,26 @@ function renderFiltres() {
 
 function setFiltreType(type) {
   filtreType = type === 'Tous les biens' ? '' : type;
+  currentPage = 1;
   renderFiltres();
   chargerAnnonces();
+}
+
+function renderPagination(page, total) {
+  if (total <= 1) return '';
+  let btns = '<div class="pagination">';
+  btns += '<button class="page-btn arrow" onclick="afficherPage(' + Math.max(1, page-1) + ')" ' + (page === 1 ? 'disabled style="opacity:0.4;cursor:default;"' : '') + '>&#8249;</button>';
+  for (let i = 1; i <= total; i++) {
+    if (total > 7 && i > 2 && i < total - 1 && Math.abs(i - page) > 1) {
+      if (i === 3 || i === total - 2) btns += '<span style="padding:0 4px;color:#B4B2A9;align-self:center;">...</span>';
+      continue;
+    }
+    btns += '<button class="page-btn' + (i === page ? ' active' : '') + '" onclick="afficherPage(' + i + ')">' + i + '</button>';
+  }
+  btns += '<button class="page-btn arrow" onclick="afficherPage(' + Math.min(total, page+1) + ')" ' + (page === total ? 'disabled style="opacity:0.4;cursor:default;"' : '') + '>&#8250;</button>';
+  btns += '<span style="font-size:11px;color:#B4B2A9;margin-left:8px;align-self:center;">' + PAGE_SIZE + ' par page</span>';
+  btns += '</div>';
+  return btns;
 }
 
 function setView(view) {
@@ -676,7 +702,7 @@ function setView(view) {
   }
 }
 
-function setFiltre(key, val) { filtres[key] = val; renderFiltres(); chargerAnnonces(); }
+function setFiltre(key, val) { filtres[key] = val; currentPage = 1; renderFiltres(); chargerAnnonces(); }
 
 function rechercherAnnonces(val) {
   const clear = document.getElementById('search-clear');
@@ -849,7 +875,19 @@ async function chargerAnnonces() {
       list.innerHTML = '<div class="empty"><div class="empty-emoji">🔍</div><div style="font-weight:600;margin-bottom:6px;">Aucun résultat</div><div style="font-size:12px;">Essayez un autre mot-clé</div></div>';
       return;
     }
-    list.innerHTML = '<div class="annonces-grid">' + annonces.map(a => {
+    totalAnnonces = annonces;
+    afficherPage(currentPage);
+  } catch (err) { list.innerHTML = '<div class="alert alert-error">' + err.message + '</div>'; }
+}
+
+function afficherPage(page) {
+  const list = document.getElementById('annonces-list');
+  currentPage = page;
+  const debut = (page - 1) * PAGE_SIZE;
+  const fin = debut + PAGE_SIZE;
+  const annonces = totalAnnonces.slice(debut, fin);
+  const totalPages = Math.ceil(totalAnnonces.length / PAGE_SIZE);
+  list.innerHTML = '<div class="annonces-grid">' + annonces.map(a => {
       const photo = (a.photos && a.photos.length > 0) ? a.photos[0] : null;
       const ico = a.icone || a.categorie?.charAt(0)?.toUpperCase() || '?';
       const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : a.statut === 'indisponible' ? 'Indisponible' : 'En attente';
@@ -872,8 +910,7 @@ async function chargerAnnonces() {
           (a.note_moyenne > 0 ? '<div style="font-size:10px;color:#BA7517;margin-top:2px;">★ ' + a.note_moyenne + '</div>' : '') +
         '</div>' +
       '</div>';
-    }).join('') + '</div>';
-  } catch (err) { list.innerHTML = '<div class="alert alert-error">' + err.message + '</div>'; }
+    }).join('') + '</div>' + renderPagination(currentPage, Math.ceil(totalAnnonces.length / PAGE_SIZE));
 }
 
 async function ouvrirDetail(id) {
