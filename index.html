@@ -229,6 +229,14 @@ body.in-conversation .app { padding-bottom: 0; }
 </head>
 <body>
 <div id="offline-banner" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:60;background:#633806;color:#fff;text-align:center;font-size:12px;padding:7px 12px;">📴 Mode hors ligne — données du <span id="offline-date"></span></div>
+<div id="reveil-serveur" style="display:none;position:fixed;inset:0;z-index:9999;background:#F7F5F0;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+  <div style="font-size:40px;margin-bottom:12px;">⏳</div>
+  <div id="reveil-titre" style="font-size:17px;font-weight:700;color:#1a1814;margin-bottom:8px;">Réveil du serveur...</div>
+  <div id="reveil-sub" style="font-size:13px;color:#6b6560;margin-bottom:18px;max-width:290px;line-height:1.5;">Le serveur se réveille, cela peut prendre jusqu'à une minute.<br>Cela arrive uniquement lors de la première visite de la journée.</div>
+  <div style="width:220px;height:6px;background:#e8e4dc;border-radius:3px;overflow:hidden;"><div id="reveil-bar" style="height:100%;width:0;background:#BA7517;border-radius:3px;transition:width 0.6s ease;"></div></div>
+  <div id="reveil-tentative" style="font-size:11px;color:#B4B2A9;margin-top:10px;"></div>
+  <div id="reveil-actions"></div>
+</div>
 <div class="app">
   <div class="header">
     <div style="display:flex;flex-direction:column;">
@@ -491,6 +499,68 @@ async function pingAPI() {
     document.getElementById('api-status').textContent = 'hors ligne';
     document.getElementById('api-status').className = 'api-status error';
   }
+}
+
+// ─── Écran de réveil serveur (cold start Render) ───
+function fetchAvecTimeout(url, ms) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+}
+function afficherReveilServeur() {
+  const o = document.getElementById('reveil-serveur');
+  if (o) o.style.display = 'flex';
+}
+function cacherReveilServeur() {
+  const o = document.getElementById('reveil-serveur');
+  if (o) o.style.display = 'none';
+}
+function majReveilServeur(tentative, max, succes = false) {
+  const bar = document.getElementById('reveil-bar');
+  const txt = document.getElementById('reveil-tentative');
+  if (bar) bar.style.width = succes ? '100%' : Math.min(90, Math.round((tentative / max) * 90)) + '%';
+  if (txt) txt.textContent = succes ? '' : 'Tentative ' + tentative + '/' + max;
+}
+function afficherServeurIndisponible() {
+  document.getElementById('reveil-titre').textContent = 'Serveur indisponible';
+  document.getElementById('reveil-sub').innerHTML = 'Impossible de joindre le serveur pour le moment.<br>Vérifiez votre connexion et réessayez.';
+  document.getElementById('reveil-bar').style.background = '#791F1F';
+  document.getElementById('reveil-tentative').textContent = '';
+  document.getElementById('reveil-actions').innerHTML =
+    '<button class="btn" style="margin-top:16px;max-width:200px;" onclick="relancerBoot()">Réessayer</button>';
+}
+async function attendreServeur() {
+  const MAX = 4;
+  let overlayAffiche = false;
+  const timer3s = setTimeout(() => { overlayAffiche = true; afficherReveilServeur(); }, 3000);
+  for (let tentative = 1; tentative <= MAX; tentative++) {
+    try {
+      const res = await fetchAvecTimeout(API_BASE + '/health', 8000);
+      if (!res.ok) throw new Error('non-ok');
+      clearTimeout(timer3s);
+      if (overlayAffiche) majReveilServeur(tentative, MAX, true);
+      cacherReveilServeur();
+      document.getElementById('api-status').textContent = 'ok';
+      document.getElementById('api-status').className = 'api-status';
+      return true;
+    } catch (e) {
+      if (!overlayAffiche) { overlayAffiche = true; clearTimeout(timer3s); afficherReveilServeur(); }
+      majReveilServeur(tentative, MAX);
+      if (tentative < MAX) await new Promise(r => setTimeout(r, 5000));
+    }
+  }
+  clearTimeout(timer3s);
+  afficherServeurIndisponible();
+  return false;
+}
+async function relancerBoot() {
+  // réinitialise l'UI de l'overlay avant un nouvel essai
+  document.getElementById('reveil-titre').textContent = 'Réveil du serveur...';
+  document.getElementById('reveil-sub').innerHTML = "Le serveur se réveille, cela peut prendre jusqu'à une minute.<br>Cela arrive uniquement lors de la première visite de la journée.";
+  document.getElementById('reveil-bar').style.background = '#BA7517';
+  document.getElementById('reveil-actions').innerHTML = '';
+  const ok = await attendreServeur();
+  if (ok) { chargerAnnonces(); }
 }
 
 function showMsg(id, msg, type = 'success') {
@@ -1212,16 +1282,68 @@ function majPublier() {
 }
 
 let photosToUpload = [];
-function previewPhotos(e) {
+
+// Charge un fichier image dans un élément <img> (compatible anciens WebView Android)
+function chargerImageElement(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image illisible')); };
+    img.src = url;
+  });
+}
+
+// Redimensionne à 1280px max, encode en JPEG 0.82, vise < 200 Ko. Ne grossit jamais l'original.
+async function compresserImage(file, maxDim = 1280, qualite = 0.82, maxOctets = 200 * 1024) {
+  if (!file.type || !file.type.startsWith('image/')) return file;
+  let img;
+  try { img = await chargerImageElement(file); } catch { return file; }
+  let { width, height } = img;
+  if (Math.max(width, height) > maxDim) {
+    const ratio = maxDim / Math.max(width, height);
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+  const toBlob = (q) => new Promise((res) => canvas.toBlob(res, 'image/jpeg', q));
+  let q = qualite;
+  let blob = await toBlob(q);
+  while (blob && blob.size > maxOctets && q > 0.5) {
+    q = Math.round((q - 0.1) * 100) / 100;
+    blob = await toBlob(q);
+  }
+  if (!blob || blob.size >= file.size) return file; // garde-fou : jamais plus lourd
+  const nom = (file.name || 'photo').replace(/\.\w+$/, '') + '.jpg';
+  return new File([blob], nom, { type: 'image/jpeg' });
+}
+
+function renderPreviewPhotos() {
+  document.getElementById('photos-preview').innerHTML = photosToUpload.map((f, idx) =>
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+      '<div class="photo-preview" style="background-image:url(' + URL.createObjectURL(f) + ')"><div class="remove" onclick="retirerPhoto(' + idx + ')">✕</div></div>' +
+      '<div style="font-size:9px;color:#888780;">' + Math.round(f.size / 1024) + ' Ko</div>' +
+    '</div>'
+  ).join('');
+}
+
+async function previewPhotos(e) {
   const files = Array.from(e.target.files).slice(0, 5);
-  photosToUpload = files;
   const preview = document.getElementById('photos-preview');
-  preview.innerHTML = files.map((f, i) => '<div class="photo-preview" style="background-image:url(' + URL.createObjectURL(f) + ')"><div class="remove" onclick="retirerPhoto(' + i + ')">✕</div></div>').join('');
+  preview.innerHTML = '<div class="loading"><span class="spinner"></span> Compression des photos...</div>';
+  const compressees = [];
+  for (const f of files) {
+    try { compressees.push(await compresserImage(f)); } catch { compressees.push(f); }
+  }
+  photosToUpload = compressees;
+  renderPreviewPhotos();
 }
 
 function retirerPhoto(i) {
   photosToUpload.splice(i, 1);
-  document.getElementById('photos-preview').innerHTML = photosToUpload.map((f, idx) => '<div class="photo-preview" style="background-image:url(' + URL.createObjectURL(f) + ')"><div class="remove" onclick="retirerPhoto(' + idx + ')">✕</div></div>').join('');
+  renderPreviewPhotos();
 }
 
 async function publier() {
@@ -1338,7 +1460,7 @@ async function majProfil() {
 function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
 
 async function init() {
-  await pingAPI();
+  await attendreServeur();
   setInterval(pingAPI, 14 * 60 * 1000);
   await chargerCategories();
   renderFiltres();
