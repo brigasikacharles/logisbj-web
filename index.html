@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LogisBJ — Plateforme de location vérifiée au Bénin</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#633806">
@@ -47,7 +47,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-ghost { background: transparent; color: #6b6560; border: 0.5px solid #e8e4dc; }
 .btn-danger { background: #791F1F; }
 .btn-sm { padding: 8px 12px; font-size: 12px; width: auto; }
-input, select, textarea { width: 100%; padding: 12px 13px; border: 0.5px solid #e8e4dc; border-radius: 10px; font-size: 14px; background: #fff; color: #1a1814; margin-bottom: 10px; font-family: inherit; }
+input, select, textarea { width: 100%; padding: 12px 13px; border: 0.5px solid #e8e4dc; border-radius: 10px; font-size: 16px; background: #fff; color: #1a1814; margin-bottom: 10px; font-family: inherit; }
 input:focus, select:focus, textarea:focus { outline: 2px solid #BA7517; outline-offset: -2px; }
 label { display: block; font-size: 12px; font-weight: 600; color: #4a4845; margin-bottom: 5px; margin-top: 8px; }
 .row { display: flex; gap: 10px; }
@@ -185,26 +185,6 @@ body.in-conversation .app { padding-bottom: 0; }
 .photos-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .photo-preview { width: 80px; height: 80px; border-radius: 8px; background-size: cover; position: relative; background-color: #f5f5f0; }
 .photo-preview .remove { position: absolute; top: -5px; right: -5px; width: 20px; height: 20px; border-radius: 50%; background: #791F1F; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; line-height: 1; }
-.plan-card { position: relative; background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 10px; border: 1px solid #e8e4dc; cursor: pointer; }
-.plan-card.actif { border: 2px solid #BA7517; }
-.plan-recommande { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #BA7517; color: #fff; font-size: 9px; font-weight: 700; padding: 2px 10px; border-radius: 10px; }
-.plan-row { display: flex; justify-content: space-between; align-items: center; }
-.plan-titre { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
-.plan-desc { font-size: 11px; color: #6b6560; }
-.plan-prix { font-size: 20px; font-weight: 700; text-align: right; }
-.plan-prix .unit { font-size: 10px; color: #6b6560; font-weight: 400; }
-.op-card { display: flex; align-items: center; gap: 12px; background: #fff; padding: 14px; border-radius: 12px; border: 1px solid #e8e4dc; cursor: pointer; margin-bottom: 8px; }
-.op-card.actif { border: 2px solid #BA7517; }
-.op-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
-.op-mtn { background: #FAEEDA; color: #633806; }
-.op-moov { background: #E6F1FB; color: #0C447C; }
-.op-celtiis { background: #EAF3DE; color: #27500A; }
-.op-info { flex: 1; }
-.op-nom { font-size: 14px; font-weight: 600; }
-.op-check { color: #BA7517; font-size: 16px; font-weight: 700; }
-.etape-bar { display: flex; gap: 4px; padding: 8px 14px; background: #fff; }
-.etape-seg { flex: 1; height: 3px; background: #e8e4dc; border-radius: 2px; }
-.etape-seg.actif { background: #BA7517; }
 .note-stars { color: #BA7517; font-size: 14px; }
 .avis-card { background: #fff; padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 0.5px solid #e8e4dc; }
 .avis-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
@@ -286,7 +266,7 @@ body.in-conversation .app { padding-bottom: 0; }
     <div style="padding:8px 14px 4px;display:flex;align-items:center;gap:8px;">
       <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ede9e0;border-radius:12px;padding:8px 12px;">
         <span style="font-size:16px;color:#B4B2A9;">🔍</span>
-        <input type="text" id="search-input" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:13px;background:transparent;outline:none;flex:1;" oninput="rechercherAnnonces(this.value)">
+        <input type="text" id="search-input" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:16px;background:transparent;outline:none;flex:1;" oninput="rechercherAnnonces(this.value)">
         <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
       </div>
       <button style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#fff;border:0.5px solid #ede9e0;border-radius:10px;font-size:12px;font-weight:600;color:#4a4845;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
@@ -303,11 +283,11 @@ body.in-conversation .app { padding-bottom: 0; }
       <div style="display:flex;gap:10px;margin-bottom:10px;">
         <div style="flex:1;">
           <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:4px;display:block;">Prix min (FCFA)</label>
-          <input type="number" id="filtre-prix-min" placeholder="0" style="margin:0;padding:8px 10px;font-size:12px;" oninput="appliquerFiltresPrix()">
+          <input type="number" id="filtre-prix-min" placeholder="0" style="margin:0;padding:8px 10px;font-size:16px;" oninput="appliquerFiltresPrix()">
         </div>
         <div style="flex:1;">
           <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:4px;display:block;">Prix max (FCFA)</label>
-          <input type="number" id="filtre-prix-max" placeholder="500000" style="margin:0;padding:8px 10px;font-size:12px;" oninput="appliquerFiltresPrix()">
+          <input type="number" id="filtre-prix-max" placeholder="500000" style="margin:0;padding:8px 10px;font-size:16px;" oninput="appliquerFiltresPrix()">
         </div>
       </div>
       <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:6px;display:block;">Statut</label>
@@ -371,9 +351,9 @@ body.in-conversation .app { padding-bottom: 0; }
     <div class="card">
       <h3>Se connecter</h3>
       <label>Téléphone</label>
-      <input type="tel" id="login-tel" placeholder="+229..." value="+2290196003114">
+      <input type="tel" id="login-tel" placeholder="+229..." autocomplete="tel">
       <label>Mot de passe</label>
-      <input type="password" id="login-pwd" placeholder="••••••••" value="MotDePasse2026">
+      <input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password">
       <button class="btn" onclick="seConnecter()">Se connecter</button>
       <div id="login-msg"></div>
     </div>
@@ -412,21 +392,6 @@ body.in-conversation .app { padding-bottom: 0; }
   </div>
 </div>
 
-<div id="modal-paiement" class="modal-overlay" style="display:none;" onclick="if(event.target===this) fermerModal('modal-paiement')">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="paiement-titre">Souscrire un abonnement</h2>
-      <div class="modal-close" onclick="fermerModal('modal-paiement')">✕</div>
-    </div>
-    <div class="etape-bar">
-      <div class="etape-seg actif" id="seg-1"></div>
-      <div class="etape-seg" id="seg-2"></div>
-      <div class="etape-seg" id="seg-3"></div>
-    </div>
-    <div id="paiement-content"></div>
-  </div>
-</div>
-
 <div id="modal-detail" class="modal-overlay" style="display:none;" onclick="if(event.target===this) fermerModal('modal-detail')">
   <div class="modal-detail-wrap">
     <div class="modal-detail-scroll" id="detail-content"></div>
@@ -443,9 +408,6 @@ let currentUser = JSON.parse(localStorage.getItem('logisbj_user') || 'null');
 let socket = null;
 let currentConvId = null;
 let currentScreen = 'annonces';
-let etapePaiement = 1;
-let planChoisi = 'proprietaire';
-let opChoisi = 'mtn';
 let categories = [];
 let filtres = { ville: '', categorie: '', recherche: '', prixMin: 0, prixMax: 0, statut: '' };
 let map = null;
@@ -461,16 +423,6 @@ const VILLES_COORDS = {
   'Bohicon':       { lat: 7.1810, lng: 2.0665, zoom: 12 },
 };
 const STATUT_COULEURS = { disponible: '#3B6D11', en_cours: '#854F0B', indisponible: '#791F1F', en_attente: '#0C447C' };
-const PLANS = {
-  chercheur:    { label: 'Chercheur',    montant: 2000,  desc: 'Étudiants & salariés' },
-  proprietaire: { label: 'Propriétaire', montant: 5000,  desc: 'Bailleurs & commerçants', recommande: true },
-  agence_pro:   { label: 'Agence Pro',   montant: 15000, desc: 'Agences immobilières' },
-};
-const OPS = {
-  mtn:     { label: 'MTN Mobile Money', short: 'MTN', class: 'op-mtn' },
-  moov:    { label: 'Moov Money',        short: 'MV',  class: 'op-moov' },
-  celtiis: { label: 'Celtiis Bénin',     short: 'CB',  class: 'op-celtiis' },
-};
 const EQUIP_LABELS = {
   eau: '💧 Eau', electricite: '⚡ Électricité', wc_prive: '🚿 WC privatif',
   cuisine: '🍳 Cuisine', climatisation: '❄️ Clim', gardien: '🔐 Gardien',
@@ -504,6 +456,18 @@ function showMsg(id, msg, type = 'success') {
   if (!el) return;
   el.innerHTML = '<div class="alert alert-' + type + '">' + msg + '</div>';
   setTimeout(() => { if (el) el.innerHTML = ''; }, 6000);
+}
+
+function esc(v) {
+  if (v === null || v === undefined) return '';
+  return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function escJs(v) {
+  return esc(String(v ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+}
+function escUrl(v) {
+  return esc(encodeURI(String(v ?? '')).replace(/'/g, '%27').replace(/\(/g, '%28').replace(/\)/g, '%29'));
 }
 
 function showToast(msg) {
@@ -541,11 +505,11 @@ async function seConnecter() {
     localStorage.setItem('logisbj_token', token);
     localStorage.setItem('logisbj_refresh', data.refreshToken);
     localStorage.setItem('logisbj_user', JSON.stringify(currentUser));
-    showMsg('login-msg', 'Connecté ! Bienvenue ' + currentUser.prenom);
+    showMsg('login-msg', 'Connecté ! Bienvenue ' + esc(currentUser.prenom));
     majUI();
     initSocket();
     setTimeout(() => showScreen('annonces'), 800);
-  } catch (err) { showMsg('login-msg', err.message, 'error'); }
+  } catch (err) { showMsg('login-msg', esc(err.message), 'error'); }
 }
 
 async function sInscrire() {
@@ -561,7 +525,7 @@ async function sInscrire() {
   try {
     await api('/auth/inscription', 'POST', data);
     showMsg('reg-msg', 'Compte créé ! Connectez-vous maintenant');
-  } catch (err) { showMsg('reg-msg', err.message, 'error'); }
+  } catch (err) { showMsg('reg-msg', esc(err.message), 'error'); }
 }
 
 function seDeconnecter() {
@@ -576,7 +540,7 @@ function seDeconnecter() {
 
 function majUI() {
   const pill = document.getElementById('user-pill');
-  if (currentUser) { pill.style.display = 'flex'; pill.innerHTML = currentUser.prenom + ' (' + currentUser.role + ')'; }
+  if (currentUser) { pill.style.display = 'flex'; pill.innerHTML = esc(currentUser.prenom) + ' (' + esc(currentUser.role) + ')'; }
   else { pill.style.display = 'none'; }
 }
 
@@ -626,6 +590,7 @@ async function demanderPermissionNotifications() {
   if (Notification.permission === 'granted') {
     showToast('✅ Notifications déjà actives — test envoyé !');
     new Notification('LogisBJ', { body: 'Les notifications fonctionnent ✅', icon: '/icon.svg' });
+    if (window.enregistrerPushFCM) window.enregistrerPushFCM();
     return;
   }
   if (Notification.permission === 'denied') {
@@ -636,6 +601,7 @@ async function demanderPermissionNotifications() {
   if (permission === 'granted') {
     showToast('✅ Notifications activées !');
     new Notification('LogisBJ', { body: 'Vous recevrez les alertes messages et annonces', icon: '/icon.svg' });
+    if (window.enregistrerPushFCM) window.enregistrerPushFCM();
   } else {
     showToast('❌ Notifications refusées');
   }
@@ -660,7 +626,7 @@ function renderFiltres() {
   if (catsBar) {
     catsBar.innerHTML =
       '<div class="chip ' + (filtres.categorie === '' ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'\')" style="flex-shrink:0;">Toutes les catégories</div>' +
-      categories.map(c => '<div class="chip ' + (filtres.categorie === c.id ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'' + c.id + '\')" style="flex-shrink:0;">' + c.nom + '</div>').join('');
+      categories.map(c => '<div class="chip ' + (filtres.categorie === c.id ? 'active' : '') + '" onclick="setFiltre(\'categorie\', \'' + escJs(c.id) + '\')" style="flex-shrink:0;">' + esc(c.nom) + '</div>').join('');
   }
 }
 
@@ -777,20 +743,20 @@ function afficherHistorique() {
       const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : '#A32D2D';
       const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : 'Indisponible';
       const ico_h = (a.categorie?.charAt(0)?.toUpperCase() || '?');
-      return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
+      return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + escJs(a.id) + '\')">' +
         '<div class="annonce-mini-photo">' +
-          '<div class="annonce-mini-photo-placeholder">' + ico_h + '</div>' +
+          '<div class="annonce-mini-photo-placeholder">' + esc(ico_h) + '</div>' +
         '</div>' +
         '<div class="annonce-mini-body">' +
           '<div class="annonce-mini-top">' +
             '<div class="annonce-mini-cat-wrap">' +
-              '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico_h + '</div>' +
-              '<span class="annonce-mini-cat">' + (a.categorie || '—') + '</span>' +
+              '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + esc(ico_h) + '</div>' +
+              '<span class="annonce-mini-cat">' + esc(a.categorie || '—') + '</span>' +
             '</div>' +
             '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
           '</div>' +
           '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
-          '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
+          '<div class="annonce-mini-lieu">📍 ' + esc(a.quartier) + ', ' + esc(a.ville) + '</div>' +
         '</div></div>';
     }).join('') + '</div>';
 }
@@ -816,20 +782,20 @@ async function afficherFavoris() {
         const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : '#A32D2D';
         const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : 'Indisponible';
         const ico = a.categorie?.charAt(0)?.toUpperCase() || '?';
-        return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
+        return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + escJs(a.id) + '\')">' +
           '<div class="annonce-mini-photo">' +
-            '<div class="annonce-mini-photo-placeholder">' + ico + '</div>' +
+            '<div class="annonce-mini-photo-placeholder">' + esc(ico) + '</div>' +
           '</div>' +
           '<div class="annonce-mini-body">' +
             '<div class="annonce-mini-top">' +
               '<div class="annonce-mini-cat-wrap">' +
-                '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>' +
-                '<span class="annonce-mini-cat">' + (a.categorie || '—') + '</span>' +
+                '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + esc(ico) + '</div>' +
+                '<span class="annonce-mini-cat">' + esc(a.categorie || '—') + '</span>' +
               '</div>' +
               '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
             '</div>' +
             '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
-            '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
+            '<div class="annonce-mini-lieu">📍 ' + esc(a.quartier) + ', ' + esc(a.ville) + '</div>' +
           '</div></div>';
       }).join('') + '</div>';
   } catch(err) { showToast('Erreur chargement favoris'); }
@@ -877,7 +843,7 @@ async function chargerAnnonces() {
     }
     totalAnnonces = annonces;
     afficherPage(currentPage);
-  } catch (err) { list.innerHTML = '<div class="alert alert-error">' + err.message + '</div>'; }
+  } catch (err) { list.innerHTML = '<div class="alert alert-error">' + esc(err.message) + '</div>'; }
 }
 
 function afficherPage(page) {
@@ -893,21 +859,21 @@ function afficherPage(page) {
       const statutLabel = a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : a.statut === 'indisponible' ? 'Indisponible' : 'En attente';
       const avatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : a.statut === 'indisponible' ? '#FCEBEB' : '#E6F1FB';
       const avatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : a.statut === 'indisponible' ? '#A32D2D' : '#0C447C';
-      return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + a.id + '\')">' +
-        '<div class="annonce-mini-photo"' + (photo ? ' style="background-image:url(' + photo + ')"' : '') + '>' +
-          (photo ? (a.verifie ? '<div class="annonce-mini-verifie" style="position:absolute;top:6px;right:6px;">✓ Vérifié</div>' : '') : '<div class="annonce-mini-photo-placeholder">' + ico + '</div>') +
+      return '<div class="annonce-mini" onclick="ouvrirDetail(\'' + escJs(a.id) + '\')">' +
+        '<div class="annonce-mini-photo"' + (photo ? ' style="background-image:url(\'' + escUrl(photo) + '\')"' : '') + '>' +
+          (photo ? (a.verifie ? '<div class="annonce-mini-verifie" style="position:absolute;top:6px;right:6px;">✓ Vérifié</div>' : '') : '<div class="annonce-mini-photo-placeholder">' + esc(ico) + '</div>') +
         '</div>' +
         '<div class="annonce-mini-body">' +
           '<div class="annonce-mini-top">' +
             '<div class="annonce-mini-cat-wrap">' +
-              '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + ico + '</div>' +
-              '<span class="annonce-mini-cat">' + (a.categorie || '—') + '</span>' +
+              '<div class="annonce-mini-cat-circle" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + esc(ico) + '</div>' +
+              '<span class="annonce-mini-cat">' + esc(a.categorie || '—') + '</span>' +
             '</div>' +
             '<div class="annonce-mini-statut" style="background:' + avatarBg + ';color:' + avatarColor + ';">' + statutLabel + '</div>' +
           '</div>' +
           '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
-          '<div class="annonce-mini-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
-          (a.note_moyenne > 0 ? '<div style="font-size:10px;color:#BA7517;margin-top:2px;">★ ' + a.note_moyenne + '</div>' : '') +
+          '<div class="annonce-mini-lieu">📍 ' + esc(a.quartier) + ', ' + esc(a.ville) + '</div>' +
+          (a.note_moyenne > 0 ? '<div style="font-size:10px;color:#BA7517;margin-top:2px;">★ ' + esc(a.note_moyenne) + '</div>' : '') +
         '</div>' +
       '</div>';
     }).join('') + '</div>' + renderPagination(currentPage, Math.ceil(totalAnnonces.length / PAGE_SIZE));
@@ -929,86 +895,117 @@ async function ouvrirDetail(id) {
     let heroHTML = '';
     if (photos.length > 0) {
       heroHTML = '<div class="detail-accent" style="background:' + detailAccent + '"></div><div class="detail-hero has-photos"><div class="detail-photos-carousel">' +
-        photos.map(p => '<div class="detail-photo" style="background-image:url(' + p + ')"></div>').join('') + '</div>';
+        photos.map(p => '<div class="detail-photo" style="background-image:url(\'' + escUrl(p) + '\')"></div>').join('') + '</div>';
     } else {
-      heroHTML = '<div class="detail-accent" style="background:' + detailAccent + '"></div><div class="detail-hero"><div class="detail-icon-large" style="background:' + detailAvatarBg + ';color:' + detailAvatarColor + ';">' + (a.categorie?.charAt(0) || '?') + '</div>';
+      heroHTML = '<div class="detail-accent" style="background:' + detailAccent + '"></div><div class="detail-hero"><div class="detail-icon-large" style="background:' + detailAvatarBg + ';color:' + detailAvatarColor + ';">' + esc(a.categorie?.charAt(0) || '?') + '</div>';
     }
     const scrollHTML = heroHTML +
       '<div class="btn-back" onclick="fermerModal(\'modal-detail\')">←</div>' +
-      '<div class="btn-share" onclick="partagerAnnonce(\'' + a.id + '\')">↗</div>' +
-      '<div class="btn-share" style="right:60px;background:rgba(252,235,235,0.9);" onclick="signalerAnnonce(\'' + a.id + '\')">🚩</div>' +
+      '<div class="btn-share" onclick="partagerAnnonce(\'' + escJs(a.id) + '\')">↗</div>' +
+      '<div class="btn-share" style="right:60px;background:rgba(252,235,235,0.9);" onclick="signalerAnnonce(\'' + escJs(a.id) + '\')">🚩</div>' +
       '</div>' +
       '<div class="detail-body">' +
         '<div class="detail-row">' +
-          '<div style="font-size:14px;font-weight:600;">' + a.categorie + '</div>' +
+          '<div style="font-size:14px;font-weight:600;">' + esc(a.categorie) + '</div>' +
           '<div class="statut-badge statut-' + a.statut + '">' + (a.statut === 'disponible' ? 'Disponible' : a.statut === 'en_cours' ? 'En cours' : a.statut === 'indisponible' ? 'Indisponible' : 'En attente') + '</div>' +
         '</div>' +
         '<div class="detail-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
-        '<div class="detail-lieu">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
-        (a.titre ? '<div style="font-weight:600;margin-bottom:8px;font-size:15px;">' + a.titre + '</div>' : '') +
+        '<div class="detail-lieu">📍 ' + esc(a.quartier) + ', ' + esc(a.ville) + '</div>' +
+        (a.titre ? '<div style="font-weight:600;margin-bottom:8px;font-size:15px;">' + esc(a.titre) + '</div>' : '') +
         '<div class="kpis-detail">' +
-          '<div class="kpi"><div class="kpi-val">' + (a.superficie || '—') + (a.superficie ? ' m²' : '') + '</div><div class="kpi-lbl">Superficie</div></div>' +
+          '<div class="kpi"><div class="kpi-val">' + esc(a.superficie || '—') + (a.superficie ? ' m²' : '') + '</div><div class="kpi-lbl">Superficie</div></div>' +
           '<div class="kpi-divider"></div>' +
           '<div class="kpi"><div class="kpi-val">' + (a.superficie ? Math.round(a.prix / a.superficie).toLocaleString() : '—') + '</div><div class="kpi-lbl">FCFA/m²</div></div>' +
           '<div class="kpi-divider"></div>' +
-          '<div class="kpi"><div class="kpi-val" style="color:#BA7517;">' + (a.note_moyenne > 0 ? '★ ' + a.note_moyenne : '—') + '</div><div class="kpi-lbl">' + (a.nb_avis || 0) + ' avis</div></div>' +
+          '<div class="kpi"><div class="kpi-val" style="color:#BA7517;">' + (a.note_moyenne > 0 ? '★ ' + esc(a.note_moyenne) : '—') + '</div><div class="kpi-lbl">' + (parseInt(a.nb_avis) || 0) + ' avis</div></div>' +
         '</div>' +
         (a.verifie ? '<div class="alert alert-success">✓ Offre vérifiée par LogisBJ — Documents contrôlés</div>' : '') +
-        (a.description ? '<div class="section-title">Description</div><div style="font-size:13px;color:#4a4845;line-height:1.6;">' + a.description + '</div>' : '') +
-        (equips.length > 0 ? '<div class="section-title">Équipements</div><div class="equip-grid">' + equips.map(e => '<div class="equip-chip">' + (EQUIP_LABELS[e] || e) + '</div>').join('') + '</div>' : '') +
+        (a.description ? '<div class="section-title">Description</div><div style="font-size:13px;color:#4a4845;line-height:1.6;">' + esc(a.description) + '</div>' : '') +
+        (equips.length > 0 ? '<div class="section-title">Équipements</div><div class="equip-grid">' + equips.map(e => '<div class="equip-chip">' + (EQUIP_LABELS[e] || esc(e)) + '</div>').join('') + '</div>' : '') +
         '<div class="section-title">Propriétaire</div>' +
         '<div class="proprio-card">' +
-          '<div class="proprio-avatar">' + ((a.proprio_prenom?.[0] || '') + (a.proprio_nom?.[0] || '')).toUpperCase() + '</div>' +
-          '<div class="proprio-info"><div class="proprio-nom">' + a.proprio_prenom + ' ' + (a.proprio_nom?.charAt(0) || '') + '.</div><div class="proprio-meta">Note ' + (a.score_confiance || '—') + ' · ' + (a.taux_reponse || 0) + '% de réponse</div></div>' +
+          '<div class="proprio-avatar">' + esc(((a.proprio_prenom?.[0] || '') + (a.proprio_nom?.[0] || '')).toUpperCase()) + '</div>' +
+          '<div class="proprio-info"><div class="proprio-nom">' + esc(a.proprio_prenom) + ' ' + esc(a.proprio_nom?.charAt(0) || '') + '.</div><div class="proprio-meta">Note ' + esc(a.score_confiance || '—') + ' · ' + esc(a.taux_reponse || 0) + '% de réponse</div></div>' +
           '<div class="statut-badge statut-disponible">✓ ID</div>' +
         '</div>' +
-        (avis.length > 0 ? '<div class="section-title">Avis récents</div>' + avis.map(av => '<div class="avis-card"><div class="avis-header"><div class="avis-auteur">' + (av.anonyme ? 'Anonyme' : av.auteur) + '</div><div class="note-stars">' + '★'.repeat(av.note_globale) + '</div></div><div class="avis-text">' + av.commentaire + '</div></div>').join('') : '') +
+        (avis.length > 0 ? '<div class="section-title">Avis récents</div>' + avis.map(av => '<div class="avis-card"><div class="avis-header"><div class="avis-auteur">' + (av.anonyme ? 'Anonyme' : esc(av.auteur)) + '</div><div class="note-stars">' + '★'.repeat(Math.min(5, Math.max(0, parseInt(av.note_globale) || 0))) + '</div></div><div class="avis-text">' + esc(av.commentaire) + '</div></div>').join('') : '') +
         '<div class="warn-box">⚠️ Ne versez aucun acompte avant la visite. LogisBJ ne collecte pas de caution.</div>' +
       '</div>';
     const avisFormHTML = currentUser && currentUser.role !== 'admin' ?
       '<div class="section-title">Laisser un avis</div><div style="padding:0 16px 16px;">' +
         '<div class="note-input" id="noteInput">' + ['1','2','3','4','5'].map(i => '<span class="star" data-note="' + i + '" onclick="noterAvis(' + i + ')">★</span>').join('') + '</div>' +
-        '<textarea id="avisCommentaire" placeholder="Votre commentaire..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;font-size:13px;" rows="3"></textarea>' +
-        '<button class="btn" onclick="posterAvis(\'' + a.id + '\')">Publier mon avis</button>' +
+        '<textarea id="avisCommentaire" placeholder="Votre commentaire..." style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;font-size:16px;" rows="3"></textarea>' +
+        '<button class="btn" onclick="posterAvis(\'' + escJs(a.id) + '\')">Publier mon avis</button>' +
       '</div>' : '';
     const footerHTML = '<div class="detail-footer">' +
-      '<button class="btn-favori ' + (isFavori(a.id) ? 'actif' : '') + '" id="btn-favori-' + a.id + '" onclick="basculerFavori(\'' + a.id + '\')">' + (isFavori(a.id) ? '❤️' : '🤍') + '</button>' +
-      '<button class="btn" onclick="contacterProprio(\'' + a.id + '\', \'' + (a.proprio_prenom || '').replace(/'/g, "\\'") + '\', \'' + (a.titre || a.categorie).replace(/'/g, "\\'") + '\')" ' + (a.statut !== 'disponible' ? 'disabled' : '') + '>' +
+      '<button class="btn-favori ' + (isFavori(a.id) ? 'actif' : '') + '" id="btn-favori-' + esc(a.id) + '" onclick="basculerFavori(\'' + escJs(a.id) + '\')">' + (isFavori(a.id) ? '❤️' : '🤍') + '</button>' +
+      '<button class="btn" onclick="contacterProprio(\'' + escJs(a.id) + '\', \'' + escJs(a.proprio_prenom || '') + '\', \'' + escJs(a.titre || a.categorie) + '\')" ' + (a.statut !== 'disponible' ? 'disabled' : '') + '>' +
         (a.statut === 'disponible' ? 'Contacter' : 'Non disponible') +
       '</button></div>';
     wrap.innerHTML = '<div class="modal-detail-scroll">' + scrollHTML + avisFormHTML + '</div>' + footerHTML;
   } catch (err) {
-    wrap.innerHTML = '<div style="padding:30px;"><div class="alert alert-error">' + err.message + '</div><button class="btn" onclick="fermerModal(\'modal-detail\')">Fermer</button></div>';
+    wrap.innerHTML = '<div style="padding:30px;"><div class="alert alert-error">' + esc(err.message) + '</div><button class="btn" onclick="fermerModal(\'modal-detail\')">Fermer</button></div>';
   }
+}
+
+// Dialogue de confirmation réutilisant les classes modal existantes (remplace confirm() natif)
+function ouvrirConfirm(message, onConfirm, labelOui = 'Confirmer', labelNon = 'Annuler') {
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.style.display = 'flex';
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = '<div class="modal"><div style="font-size:15px;line-height:1.5;margin-bottom:16px;">' + esc(message) + '</div>' +
+    '<div class="row" style="gap:8px;"><button class="btn btn-ghost" data-role="non">' + esc(labelNon) + '</button>' +
+    '<button class="btn" data-role="oui">' + esc(labelOui) + '</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('[data-role="non"]').onclick = () => ov.remove();
+  ov.querySelector('[data-role="oui"]').onclick = () => { ov.remove(); onConfirm(); };
 }
 
 async function contacterProprio(annonceId, prenomProprio, titreAnnonce) {
   if (!currentUser) { fermerModal('modal-detail'); showScreen('connexion'); return; }
   if (!['chercheur', 'proprietaire', 'agence_pro'].includes(currentUser.abonnement)) {
-    if (!confirm('Abonnement requis pour contacter. Souscrire maintenant ?')) return;
-    fermerModal('modal-detail'); ouvrirPaiement(); return;
+    ouvrirConfirm('Abonnement requis pour contacter. Souscrire maintenant ?', () => {
+      fermerModal('modal-detail'); ouvrirPaiement();
+    }, 'Souscrire', 'Plus tard');
+    return;
   }
   try {
     const data = await api('/messages/conversations', 'POST', { annonce_id: annonceId, premier_message: 'Bonjour, je suis intéressé(e) par votre annonce.' });
     fermerModal('modal-detail');
     ouvrirConversation(data.conversation_id, prenomProprio, titreAnnonce);
-  } catch (err) { alert('Erreur : ' + err.message); }
+  } catch (err) { showToast('Erreur : ' + err.message); }
 }
 
 function signalerAnnonce(id) {
-  if (!currentUser) return alert('Connectez-vous pour signaler.');
-  const motif = prompt('Motif du signalement :\n1. Annonce frauduleuse\n2. Prix incorrect\n3. Photos fausses\n4. Autre\n\nEntrez votre motif :');
-  if (!motif) return;
-  fetch('https://logisbj-backend.onrender.com/api/annonces/' + id + '/signaler', {
-    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('logisbj_token') },
-    body: JSON.stringify({ motif })
-  }).then(res => res.json()).then(data => alert(data.message || 'Signalement envoyé. Merci !')).catch(() => alert('Erreur réseau.'));
+  if (!currentUser) { showToast('Connectez-vous pour signaler'); return; }
+  const motifs = ['Annonce frauduleuse', 'Prix incorrect', 'Photos fausses', 'Autre'];
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.style.display = 'flex';
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = '<div class="modal"><div class="modal-header"><h2 style="font-size:16px;margin:0;">Signaler cette annonce</h2><div class="modal-close" data-role="close">✕</div></div>' +
+    '<div style="font-size:13px;color:#6b6560;margin-bottom:12px;">Choisissez un motif :</div>' +
+    motifs.map(m => '<button class="btn btn-ghost" style="margin-bottom:8px;text-align:left;" data-motif="' + esc(m) + '">' + esc(m) + '</button>').join('') +
+    '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('[data-role="close"]').onclick = () => ov.remove();
+  ov.querySelectorAll('[data-motif]').forEach(btn => {
+    btn.onclick = () => { const motif = btn.getAttribute('data-motif'); ov.remove(); envoyerSignalement(id, motif); };
+  });
+}
+
+async function envoyerSignalement(id, motif) {
+  try {
+    const data = await api('/annonces/' + id + '/signaler', 'POST', { motif });
+    showToast(data.message || 'Signalement envoyé. Merci !');
+  } catch { showToast('Erreur réseau'); }
 }
 
 function partagerAnnonce(id) {
   const url = window.location.origin + '/?annonce=' + id;
   if (navigator.share) { navigator.share({ title: 'LogisBJ', url }); }
-  else { navigator.clipboard.writeText(url).then(() => alert('Lien copié !')); }
+  else { navigator.clipboard.writeText(url).then(() => showToast('Lien copié !')); }
 }
 
 function initCarte() {
@@ -1055,10 +1052,10 @@ async function chargerMarqueurs(ville) {
 function afficherFicheCarte(a) {
   const fiche = document.getElementById('carte-fiche');
   document.getElementById('carte-fiche-content').innerHTML =
-    '<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div style="font-weight:700;">' + a.categorie + '</div><div class="statut-badge statut-' + a.statut + '">' + a.statut + '</div></div>' +
+    '<div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div style="font-weight:700;">' + esc(a.categorie) + '</div><div class="statut-badge statut-' + esc(a.statut) + '">' + esc(a.statut) + '</div></div>' +
     '<div style="font-size:18px;font-weight:700;color:#BA7517;margin-bottom:4px;">' + a.prix.toLocaleString() + ' <span style="font-size:11px;font-weight:400;color:#6b6560;">FCFA/mois</span></div>' +
-    '<div style="font-size:12px;color:#6b6560;margin-bottom:10px;">📍 ' + a.quartier + ', ' + a.ville + '</div>' +
-    '<button class="btn btn-sm" onclick="document.getElementById(\'carte-fiche\').classList.remove(\'active\'); ouvrirDetail(\'' + a.id + '\')">Voir l\'annonce →</button>';
+    '<div style="font-size:12px;color:#6b6560;margin-bottom:10px;">📍 ' + esc(a.quartier) + ', ' + esc(a.ville) + '</div>' +
+    '<button class="btn btn-sm" onclick="document.getElementById(\'carte-fiche\').classList.remove(\'active\'); ouvrirDetail(\'' + escJs(a.id) + '\')">Voir l\'annonce →</button>';
   fiche.classList.add('active');
 }
 
@@ -1072,16 +1069,16 @@ async function chargerConversations() {
       return;
     }
     list.innerHTML = data.conversations.map(c =>
-      '<div class="conv" onclick="ouvrirConversation(\'' + c.id + '\', \'' + c.interlocuteur + '\', \'' + (c.categorie + ' · ' + c.quartier) + '\')">' +
-        '<div class="conv-avatar">' + (c.initiales || '??') + '</div>' +
-        '<div class="conv-info"><div class="conv-row1"><div class="conv-nom ' + (c.non_lus > 0 ? 'gras' : '') + '">' + c.interlocuteur + '</div><div class="conv-date">' + formatDate(c.dernier_msg_le) + '</div></div>' +
-        '<div class="conv-annonce">' + c.categorie + ' · ' + c.quartier + '</div>' +
-        '<div class="conv-msg ' + (c.non_lus > 0 ? 'gras' : '') + '">' + (c.dernier_msg || 'Conversation démarrée') + '</div></div>' +
-        (c.non_lus > 0 ? '<div class="conv-badge">' + c.non_lus + '</div>' : '') +
+      '<div class="conv" onclick="ouvrirConversation(\'' + escJs(c.id) + '\', \'' + escJs(c.interlocuteur) + '\', \'' + escJs(c.categorie + ' · ' + c.quartier) + '\')">' +
+        '<div class="conv-avatar">' + esc(c.initiales || '??') + '</div>' +
+        '<div class="conv-info"><div class="conv-row1"><div class="conv-nom ' + (c.non_lus > 0 ? 'gras' : '') + '">' + esc(c.interlocuteur) + '</div><div class="conv-date">' + formatDate(c.dernier_msg_le) + '</div></div>' +
+        '<div class="conv-annonce">' + esc(c.categorie) + ' · ' + esc(c.quartier) + '</div>' +
+        '<div class="conv-msg ' + (c.non_lus > 0 ? 'gras' : '') + '">' + esc(c.dernier_msg || 'Conversation démarrée') + '</div></div>' +
+        (c.non_lus > 0 ? '<div class="conv-badge">' + parseInt(c.non_lus) + '</div>' : '') +
       '</div>'
     ).join('');
     majBadgeMessages();
-  } catch (err) { list.innerHTML = '<div class="alert alert-error">' + err.message + '</div>'; }
+  } catch (err) { list.innerHTML = '<div class="alert alert-error">' + esc(err.message) + '</div>'; }
 }
 
 function formatDate(d) {
@@ -1129,10 +1126,10 @@ async function chargerMessages(convId) {
     const data = await api('/messages/conversations/' + convId + '/messages');
     c.innerHTML = data.messages.map(m => {
       const moi = m.expediteur_id === currentUser.id;
-      return '<div class="msg-wrap ' + (moi ? 'moi' : 'eux') + '"><div class="msg-bubble">' + m.contenu + '</div><div class="msg-heure">' + formatDate(m.envoye_le) + '</div></div>';
+      return '<div class="msg-wrap ' + (moi ? 'moi' : 'eux') + '"><div class="msg-bubble">' + esc(m.contenu) + '</div><div class="msg-heure">' + formatDate(m.envoye_le) + '</div></div>';
     }).join('');
     c.scrollTop = c.scrollHeight;
-  } catch (err) { c.innerHTML = '<div class="alert alert-error">' + err.message + '</div>'; }
+  } catch (err) { c.innerHTML = '<div class="alert alert-error">' + esc(err.message) + '</div>'; }
 }
 
 function envoyerMsg() {
@@ -1146,7 +1143,7 @@ function envoyerMsg() {
 function ajouterMsgUI(msg) {
   const c = document.getElementById('conv-messages');
   const moi = msg.expediteur_id === currentUser.id;
-  c.innerHTML += '<div class="msg-wrap ' + (moi ? 'moi' : 'eux') + '"><div class="msg-bubble">' + msg.contenu + '</div><div class="msg-heure">' + formatDate(msg.envoye_le) + '</div></div>';
+  c.innerHTML += '<div class="msg-wrap ' + (moi ? 'moi' : 'eux') + '"><div class="msg-bubble">' + esc(msg.contenu) + '</div><div class="msg-heure">' + formatDate(msg.envoye_le) + '</div></div>';
   c.scrollTop = c.scrollHeight;
 }
 
@@ -1199,7 +1196,7 @@ async function publier() {
     }
     showMsg('pub-msg', '✅ Annonce soumise pour vérification !');
     setTimeout(() => { showScreen('annonces'); photosToUpload = []; }, 2000);
-  } catch (err) { showMsg('pub-msg', err.message, 'error'); }
+  } catch (err) { showMsg('pub-msg', esc(err.message), 'error'); }
 }
 
 function ouvrirPaiement(plan) {
@@ -1214,41 +1211,9 @@ function ouvrirPaiement(plan) {
       currentUser.abonnement = planSelectionne;
       localStorage.setItem('logisbj_user', JSON.stringify(currentUser));
       majUI();
-      alert('Paiement reussi ! Abonnement ' + label + ' active.');
-    } catch (err) { alert('Erreur : ' + err.message); }
+      showToast('✅ Paiement réussi ! Abonnement ' + label + ' activé.');
+    } catch (err) { showToast('Erreur : ' + err.message); }
   });
-}
-
-function majPaiement() {
-  for (let i = 1; i <= 3; i++) document.getElementById('seg-' + i).classList.toggle('actif', i <= etapePaiement);
-  const c = document.getElementById('paiement-content');
-  if (etapePaiement === 1) {
-    document.getElementById('paiement-titre').textContent = 'Choisir un plan';
-    c.innerHTML = Object.keys(PLANS).map(k => {
-      const p = PLANS[k];
-      return '<div class="plan-card ' + (planChoisi === k ? 'actif' : '') + '" onclick="planChoisi=\'' + k + '\';majPaiement()">' + (p.recommande ? '<div class="plan-recommande">RECOMMANDÉ</div>' : '') + '<div class="plan-row"><div><div class="plan-titre">' + p.label + '</div><div class="plan-desc">' + p.desc + '</div></div><div class="plan-prix">' + p.montant.toLocaleString() + '<div class="unit">FCFA/mois</div></div></div></div>';
-    }).join('') + '<button class="btn" style="margin-top:12px;" onclick="etapePaiement=2;majPaiement()">Continuer →</button>';
-  } else if (etapePaiement === 2) {
-    document.getElementById('paiement-titre').textContent = 'Choisir un opérateur';
-    c.innerHTML = Object.keys(OPS).map(k => {
-      const o = OPS[k];
-      return '<div class="op-card ' + (opChoisi === k ? 'actif' : '') + '" onclick="opChoisi=\'' + k + '\';majPaiement()"><div class="op-avatar ' + o.class + '">' + o.short + '</div><div class="op-info"><div class="op-nom">' + o.label + '</div></div>' + (opChoisi === k ? '<div class="op-check">✓</div>' : '') + '</div>';
-    }).join('') + '<div class="row" style="margin-top:12px;gap:8px;"><button class="btn btn-ghost" onclick="etapePaiement=1;majPaiement()">← Retour</button><button class="btn" onclick="etapePaiement=3;majPaiement()">Continuer →</button></div>';
-  } else if (etapePaiement === 3) {
-    document.getElementById('paiement-titre').textContent = 'Numéro Mobile Money';
-    const p = PLANS[planChoisi]; const o = OPS[opChoisi];
-    c.innerHTML = '<div class="alert alert-info" style="display:flex;gap:10px;align-items:center;"><div class="op-avatar ' + o.class + '" style="width:36px;height:36px;font-size:11px;">' + o.short + '</div><div>' + o.label + '</div></div><label>Numéro de téléphone</label><input type="tel" id="pay-tel" placeholder="+229..." value="' + (currentUser?.telephone || '') + '"><div class="card" style="background:#F1EFE8;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span>Plan</span><span style="font-weight:600;">' + p.label + '</span></div><div style="display:flex;justify-content:space-between;font-size:13px;"><span>Montant</span><span style="font-weight:700;color:#BA7517;font-size:16px;">' + p.montant.toLocaleString() + ' FCFA</span></div></div><div class="row" style="margin-top:12px;gap:8px;"><button class="btn btn-ghost" onclick="etapePaiement=2;majPaiement()">← Retour</button><button class="btn" onclick="lancerPaiement()">Confirmer le paiement</button></div><div id="pay-msg"></div>';
-  }
-}
-
-async function lancerPaiement() {
-  const tel = document.getElementById('pay-tel').value.trim();
-  if (!tel) return showMsg('pay-msg', 'Numéro requis', 'error');
-  try {
-    showMsg('pay-msg', '<span class="spinner"></span> Initiation...', 'info');
-    const data = await api('/paiements/initier', 'POST', { plan: planChoisi, operateur: opChoisi, numero_tel: tel });
-    showMsg('pay-msg', '✅ ' + data.message + '<br><br>Référence : ' + data.reference);
-  } catch (err) { showMsg('pay-msg', err.message, 'error'); }
 }
 
 async function majProfil() {
@@ -1279,8 +1244,8 @@ async function majProfil() {
   }
   c.innerHTML =
     '<div style="background:#BA7517;border-radius:14px;padding:20px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">' +
-      '<div style="width:56px;height:56px;border-radius:28px;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;">' + initiales + '</div>' +
-      '<div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;color:#fff;">' + currentUser.prenom + ' ' + currentUser.nom + '</div><div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;">' + currentUser.telephone + '</div><div style="margin-top:8px;display:inline-block;background:rgba(255,255,255,0.2);color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;">' + currentUser.role + '</div></div>' +
+      '<div style="width:56px;height:56px;border-radius:28px;background:rgba(255,255,255,0.2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;">' + esc(initiales) + '</div>' +
+      '<div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;color:#fff;">' + esc(currentUser.prenom) + ' ' + esc(currentUser.nom) + '</div><div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;">' + esc(currentUser.telephone) + '</div><div style="margin-top:8px;display:inline-block;background:rgba(255,255,255,0.2);color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;">' + esc(currentUser.role) + '</div></div>' +
     '</div>' +
     stats +
     '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div style="font-size:13px;font-weight:700;">Abonnement actuel</div><div style="background:' + planBg[abo] + ';color:' + planColors[abo] + ';padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">' + planLabels[abo] + '</div></div>' +
@@ -1308,7 +1273,7 @@ async function majProfil() {
         '<div style="flex:1;font-size:13px;font-weight:600;">Récemment consultés <span style="background:#888780;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">' + getHistorique().length + '</span></div>' +
         '<div style="color:#B4B2A9;font-size:16px;">›</div>' +
       '</div>' +
-      '<div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;" onclick="alert(\'Support : +229 97 00 00 00\')">' +
+      '<div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;" onclick="showToast(\'Support : +229 97 00 00 00\')">' +
         '<div style="width:34px;height:34px;border-radius:10px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:16px;">🎧</div>' +
         '<div style="flex:1;font-size:13px;font-weight:600;">Aide & Support</div><div style="color:#B4B2A9;font-size:16px;">›</div>' +
       '</div>' +
@@ -1341,17 +1306,13 @@ function noterAvis(note) {
 async function posterAvis(annonceId) {
   const note = parseInt(document.getElementById('noteInput').dataset.note || 0);
   const commentaire = document.getElementById('avisCommentaire').value.trim();
-  if (!note) return alert('Veuillez choisir une note.');
-  if (!commentaire) return alert('Veuillez écrire un commentaire.');
+  if (!note) return showToast('Veuillez choisir une note');
+  if (!commentaire) return showToast('Veuillez écrire un commentaire');
   try {
-    const res = await fetch('https://logisbj-backend.onrender.com/api/avis/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('logisbj_token') },
-      body: JSON.stringify({ annonce_id: annonceId, note_globale: note, commentaire })
-    });
-    if (res.ok) { alert('Avis publié avec succès !'); location.reload(); }
-    else { const err = await res.json(); alert(err.error || 'Erreur lors de la publication.'); }
-  } catch(e) { alert('Erreur réseau.'); }
+    await api('/avis/', 'POST', { annonce_id: annonceId, note_globale: note, commentaire });
+    showToast('✅ Avis publié avec succès !');
+    setTimeout(() => location.reload(), 1200);
+  } catch (err) { showToast(err.message || 'Erreur lors de la publication'); }
 }
 
 init();
@@ -1393,7 +1354,8 @@ onMessage(messaging, (payload) => {
   const { title, body } = payload.notification;
   new Notification(title, { body, icon: '/icon-192.png' });
 });
-window.addEventListener('load', () => { setTimeout(activerNotifications, 3000); });
+// Enregistrement FCM déclenché uniquement par le bouton "Activer les notifications" du profil.
+window.enregistrerPushFCM = activerNotifications;
 
 </script>
 </body>
