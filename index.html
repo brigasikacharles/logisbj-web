@@ -231,6 +231,7 @@ body.in-conversation .app { padding-bottom: 0; }
 <script src="https://cdn.kkiapay.me/k.js"></script>
 </head>
 <body>
+<div id="offline-banner" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:60;background:#633806;color:#fff;text-align:center;font-size:12px;padding:7px 12px;">📴 Mode hors ligne — données du <span id="offline-date"></span></div>
 <div class="app">
   <div class="header">
     <div style="display:flex;flex-direction:column;">
@@ -401,6 +402,9 @@ body.in-conversation .app { padding-bottom: 0; }
 <script>
 const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
+// Version applicative : pilote le namespace de cache du service worker (?v=).
+// Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
+const APP_VERSION = '2026-07-11-1';
 document.getElementById('api-url').textContent = API_URL;
 
 let token = localStorage.getItem('logisbj_token');
@@ -1293,8 +1297,21 @@ async function init() {
   if (currentUser && token) { initSocket(); setTimeout(majBadgeMessages, 2000); }
   showScreen('annonces');
   if ('serviceWorker' in navigator) {
-    try { const reg = await navigator.serviceWorker.register('/service-worker.js'); console.log('PWA active', reg.scope); }
+    try { const reg = await navigator.serviceWorker.register('/service-worker.js?v=' + APP_VERSION); console.log('PWA active', reg.scope); }
     catch (err) { console.warn('SW non enregistré:', err); }
+    navigator.serviceWorker.addEventListener('message', (e) => {
+      const banner = document.getElementById('offline-banner');
+      if (!banner) return;
+      if (e.data?.type === 'hors-ligne') {
+        const d = e.data.depuis ? new Date(e.data.depuis) : null;
+        document.getElementById('offline-date').textContent = d
+          ? d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+          : 'votre dernière visite';
+        banner.style.display = 'block';
+      } else if (e.data?.type === 'reseau-ok') {
+        banner.style.display = 'none';
+      }
+    });
   }
 }
 
