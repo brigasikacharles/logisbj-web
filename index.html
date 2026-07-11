@@ -44,6 +44,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-secondary { background: #fff; color: #BA7517; border: 1.5px solid #BA7517; }
 .btn-ghost { background: transparent; color: #6b6560; border: 0.5px solid #e8e4dc; }
 .btn-danger { background: #791F1F; }
+.btn-whatsapp { background: #25D366; color: #fff; border: 0; padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; margin-top: 10px; }
+.btn-whatsapp:hover { opacity: 0.92; }
 .btn-sm { padding: 8px 12px; font-size: 12px; width: auto; }
 input, select, textarea { width: 100%; padding: 12px 13px; border: 0.5px solid #e8e4dc; border-radius: 10px; font-size: 16px; background: #fff; color: #1a1814; margin-bottom: 10px; font-family: inherit; }
 input:focus, select:focus, textarea:focus { outline: 2px solid #BA7517; outline-offset: -2px; }
@@ -463,6 +465,7 @@ let map = null;
 let markersLayer = null;
 let prixTimeout = null;
 let rechercheTimeout = null;
+let annonceDetailCourante = null;
 
 const VILLES = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon'];
 const VILLES_COORDS = {
@@ -1002,6 +1005,7 @@ async function ouvrirDetail(id) {
   try {
     const data = await api('/annonces/' + id);
     const a = data.annonce;ajouterHistorique(a);
+    annonceDetailCourante = a;
     const avis = data.avis || [];
     const photos = a.photos || [];
     const equips = a.equipements ? Object.keys(a.equipements).filter(k => a.equipements[k]) : [];
@@ -1042,10 +1046,12 @@ async function ouvrirDetail(id) {
         '<div class="proprio-card">' +
           '<div class="proprio-avatar">' + esc(((a.proprio_prenom?.[0] || '') + (a.proprio_nom?.[0] || '')).toUpperCase()) + '</div>' +
           '<div class="proprio-info"><div class="proprio-nom">' + esc(a.proprio_prenom) + ' ' + esc(a.proprio_nom?.charAt(0) || '') + '.</div><div class="proprio-meta">Note ' + esc(a.score_confiance || '—') + ' · ' + esc(a.taux_reponse || 0) + '% de réponse</div></div>' +
-          '<div class="statut-badge statut-disponible">✓ ID</div>' +
+          (a.proprietaire_verifie === true ? '<div class="statut-badge statut-disponible">✓ ID</div>' : '') +
         '</div>' +
+        (a.proprio_telephone ? '<button class="btn-whatsapp" onclick="contacterWhatsApp(annonceDetailCourante)">' + iconeWhatsApp() + ' Contacter sur WhatsApp</button>' : '') +
         (avis.length > 0 ? '<div class="section-title">Avis récents</div>' + avis.map(av => '<div class="avis-card"><div class="avis-header"><div class="avis-auteur">' + (av.anonyme ? 'Anonyme' : esc(av.auteur)) + '</div><div class="note-stars">' + '★'.repeat(Math.min(5, Math.max(0, parseInt(av.note_globale) || 0))) + '</div></div><div class="avis-text">' + esc(av.commentaire) + '</div></div>').join('') : '') +
         '<div class="warn-box">⚠️ Ne versez aucun acompte avant la visite. LogisBJ ne collecte pas de caution.</div>' +
+        '<button class="btn-whatsapp" onclick="partagerWhatsApp(annonceDetailCourante)">' + iconeWhatsApp() + ' Partager sur WhatsApp</button>' +
       '</div>';
     const avisFormHTML = currentUser && currentUser.role !== 'admin' ?
       '<div class="section-title">Laisser un avis</div><div style="padding:0 16px 16px;">' +
@@ -1078,16 +1084,44 @@ function ouvrirConfirm(message, onConfirm, labelOui = 'Confirmer', labelNon = 'A
   ov.querySelector('[data-role="oui"]').onclick = () => { ov.remove(); onConfirm(); };
 }
 
+// ─── Freemium chercheurs : 3 contacts gratuits/mois (compteur localStorage, reset mensuel) ───
+const MESSAGES_GRATUITS_MAX = 3;
+function moisCourant() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function cleMessagesGratuits() { return 'messages_gratuits_' + (currentUser?.id || 'anon'); }
+function getMessagesGratuits() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(cleMessagesGratuits()) || 'null');
+    if (!raw || raw.mois !== moisCourant()) return 0;
+    return raw.count || 0;
+  } catch { return 0; }
+}
+function incrementerMessagesGratuits() {
+  const count = getMessagesGratuits() + 1;
+  localStorage.setItem(cleMessagesGratuits(), JSON.stringify({ mois: moisCourant(), count }));
+  return count;
+}
+function abonnementActif() {
+  return ['chercheur', 'proprietaire', 'agence_pro'].includes(currentUser?.abonnement);
+}
+
 async function contacterProprio(annonceId, prenomProprio, titreAnnonce) {
   if (!currentUser) { fermerModal('modal-detail'); showScreen('connexion'); return; }
-  if (!['chercheur', 'proprietaire', 'agence_pro'].includes(currentUser.abonnement)) {
-    ouvrirConfirm('Abonnement requis pour contacter. Souscrire maintenant ?', () => {
-      fermerModal('modal-detail'); ouvrirPaiement();
-    }, 'Souscrire', 'Plus tard');
+  const abonne = abonnementActif();
+  if (!abonne && getMessagesGratuits() >= MESSAGES_GRATUITS_MAX) {
+    ouvrirConfirm('Vous avez utilisé vos ' + MESSAGES_GRATUITS_MAX + ' contacts gratuits ce mois-ci. Passez à l\'abonnement Chercheur (2 000 FCFA/mois) pour contacter les propriétaires sans limite.', () => {
+      fermerModal('modal-detail'); ouvrirPaiement('chercheur');
+    }, 'Souscrire (2 000 FCFA)', 'Plus tard');
     return;
   }
   try {
     const data = await api('/messages/conversations', 'POST', { annonce_id: annonceId, premier_message: 'Bonjour, je suis intéressé(e) par votre annonce.' });
+    if (!abonne) {
+      const n = incrementerMessagesGratuits();
+      showToast('Message envoyé — ' + n + '/' + MESSAGES_GRATUITS_MAX + ' contacts gratuits ce mois-ci');
+    }
     fermerModal('modal-detail');
     ouvrirConversation(data.conversation_id, prenomProprio, titreAnnonce);
   } catch (err) { showToast('Erreur : ' + err.message); }
@@ -1124,6 +1158,32 @@ function partagerAnnonce(id) {
   else { navigator.clipboard.writeText(url).then(() => showToast('Lien copié !')); }
 }
 
+// ─── WhatsApp ───
+function iconeWhatsApp(taille = 16) {
+  return '<svg width="' + taille + '" height="' + taille + '" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.2 4.79 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0012.04 2zm5.8 14.16c-.24.68-1.42 1.31-1.95 1.36-.5.05-.99.24-3.35-.7-2.82-1.11-4.6-3.98-4.74-4.17-.14-.19-1.13-1.5-1.13-2.86 0-1.36.71-2.03.96-2.31.25-.28.55-.35.73-.35.18 0 .37 0 .53.01.17.01.4-.06.62.48.24.57.81 1.96.88 2.1.07.14.12.31.02.5-.09.19-.14.31-.28.47-.14.16-.29.36-.42.48-.14.14-.28.29-.12.57.16.28.71 1.17 1.53 1.9 1.05.94 1.94 1.23 2.22 1.37.28.14.44.12.6-.07.16-.19.69-.81.87-1.09.18-.28.37-.23.62-.14.25.09 1.6.76 1.87.9.28.14.46.21.53.33.07.12.07.68-.17 1.36z"/></svg>';
+}
+function normaliserTelBenin(tel) {
+  if (!tel) return '';
+  let d = String(tel).replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('229')) return d;
+  return '229' + d.replace(/^0+/, '');
+}
+function partagerWhatsApp(a) {
+  if (!a) return;
+  const lien = 'https://logisbj-web.vercel.app/?annonce=' + a.id;
+  const texte = (a.titre || a.categorie) + ' — ' + a.prix.toLocaleString() + ' FCFA/mois à ' + a.quartier + ', ' + a.ville + '\n' + lien;
+  window.open('https://wa.me/?text=' + encodeURIComponent(texte), '_blank');
+}
+function contacterWhatsApp(a) {
+  if (!a) return;
+  const tel = normaliserTelBenin(a.proprio_telephone);
+  if (!tel) { showToast('Numéro du propriétaire indisponible'); return; }
+  const lien = 'https://logisbj-web.vercel.app/?annonce=' + a.id;
+  const msg = 'Bonjour, je suis intéressé(e) par votre annonce "' + (a.titre || a.categorie) + '" sur LogisBJ : ' + lien;
+  window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
 async function initCarte() {
   if (map) return;
   const mapEl = document.getElementById('map');
@@ -1155,17 +1215,17 @@ async function chargerMarqueurs(ville) {
   try {
     const params = ville ? '?ville=' + encodeURIComponent(ville) : '';
     const data = await api('/annonces' + params);
-    const annoncesAvecCoords = data.annonces.map((a, i) => {
-      if (a.latitude && a.longitude) return a;
-      const villeC = VILLES_COORDS[a.ville];
-      if (!villeC) return null;
-      const seed = a.id ? a.id.charCodeAt(0) + a.id.charCodeAt(5) : i;
-      return { ...a, latitude: villeC.lat + ((seed * 7) % 100 - 50) / 1000, longitude: villeC.lng + ((seed * 13) % 100 - 50) / 1000 };
-    }).filter(Boolean);
+    // On n'affiche QUE les annonces géolocalisées réellement (plus de position inventée).
+    const annoncesAvecCoords = data.annonces.filter(a => a.latitude && a.longitude);
     annoncesAvecCoords.forEach(a => {
       const couleur = STATUT_COULEURS[a.statut] || '#BA7517';
+      const lat = parseFloat(a.latitude), lng = parseFloat(a.longitude);
+      // Cercle de zone approximative (rayon 200 m) — protège la localisation exacte du bien.
+      const cercle = L.circle([lat, lng], { radius: 200, color: couleur, weight: 1.5, fillColor: couleur, fillOpacity: 0.12 }).addTo(markersLayer);
+      cercle.on('click', () => afficherFicheCarte(a));
+      // Marqueur-prix au centre du cercle pour la lisibilité.
       const icon = L.divIcon({ className: '', html: '<div class="carte-marker" style="border-color:' + couleur + ';color:' + couleur + ';">' + Math.round(a.prix/1000) + 'K</div>', iconSize: [50, 22], iconAnchor: [25, 11] });
-      const marker = L.marker([a.latitude, a.longitude], { icon }).addTo(markersLayer);
+      const marker = L.marker([lat, lng], { icon }).addTo(markersLayer);
       marker.on('click', () => afficherFicheCarte(a));
     });
   } catch (err) { console.error(err); }
@@ -1276,7 +1336,7 @@ function majPublier() {
     c.innerHTML = '<div class="alert alert-info">Abonnement Propriétaire ou Agence Pro requis.<br><br></div><button class="btn" onclick="ouvrirPaiement()">Souscrire un abonnement</button>';
     return;
   }
-  c.innerHTML = '<div class="card"><h3>Nouvelle annonce</h3><label>Catégorie</label><select id="pub-cat"><option>Studio</option><option>1Ch/Salon</option><option>2Ch/Salon</option><option>3Ch/Salon</option><option>Appartement</option><option>Boutique à louer</option><option>Atelier à louer</option></select><label>Titre</label><input id="pub-titre" placeholder="Ex: Studio meublé Cadjèhoun"><label>Description</label><textarea id="pub-desc" rows="3" placeholder="Décrivez le logement..."></textarea><div class="row"><div><label>Prix (FCFA)</label><input type="number" id="pub-prix" placeholder="45000"></div><div><label>Superficie (m²)</label><input type="number" id="pub-surf" placeholder="35"></div></div><label>Ville</label><select id="pub-ville"><option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option><option>Abomey-Calavi</option><option>Bohicon</option></select><label>Quartier</label><input id="pub-quartier" placeholder="Ex: Cadjèhoun"><label>Équipements</label><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="pub-equips">' +
+  c.innerHTML = '<div class="card"><h3>Nouvelle annonce</h3><label>Catégorie</label><select id="pub-cat"><option>Studio</option><option>1Ch/Salon</option><option>2Ch/Salon</option><option>3Ch/Salon</option><option>Appartement</option><option>Boutique à louer</option><option>Atelier à louer</option></select><label>Titre</label><input id="pub-titre" placeholder="Ex: Studio meublé Cadjèhoun"><label>Description</label><textarea id="pub-desc" rows="3" placeholder="Décrivez le logement..."></textarea><div class="row"><div><label>Prix (FCFA)</label><input type="number" id="pub-prix" placeholder="45000"></div><div><label>Superficie (m²)</label><input type="number" id="pub-surf" placeholder="35"></div></div><label>Ville</label><select id="pub-ville"><option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option><option>Abomey-Calavi</option><option>Bohicon</option></select><label>Quartier</label><input id="pub-quartier" placeholder="Ex: Cadjèhoun"><label>Localisation GPS (optionnel)</label><input type="hidden" id="pub-lat"><input type="hidden" id="pub-lng"><button type="button" class="btn btn-secondary" onclick="capturerPosition()" style="margin-bottom:6px;">📍 Ma position</button><div id="pub-geo-msg" style="font-size:11px;color:#6b6560;margin-bottom:10px;">Aide les locataires à situer le bien (zone approximative uniquement).</div><label>Équipements</label><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="pub-equips">' +
     Object.keys(EQUIP_LABELS).map(e => '<div class="chip" data-eq="' + e + '" onclick="this.classList.toggle(\'active\')">' + EQUIP_LABELS[e] + '</div>').join('') +
     '</div><label>Photos</label><div class="uploader" onclick="document.getElementById(\'pub-photos\').click()"><div class="uploader-emoji">📷</div><div style="font-size:13px;color:#6b6560;">Ajouter des photos</div><div style="font-size:11px;color:#B4B2A9;margin-top:4px;">Maximum 5 photos</div></div><input type="file" id="pub-photos" accept="image/*" multiple style="display:none;" onchange="previewPhotos(event)"><div class="photos-preview" id="photos-preview"></div><button class="btn" onclick="publier()" style="margin-top:14px;">Publier l\'annonce</button><div id="pub-msg"></div></div>';
 }
@@ -1329,6 +1389,23 @@ function renderPreviewPhotos() {
   ).join('');
 }
 
+function capturerPosition() {
+  const msg = document.getElementById('pub-geo-msg');
+  if (!('geolocation' in navigator)) { if (msg) { msg.textContent = 'Géolocalisation non supportée sur cet appareil'; msg.style.color = '#791F1F'; } return; }
+  if (msg) { msg.innerHTML = '<span class="spinner"></span> Localisation en cours...'; msg.style.color = '#6b6560'; }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      document.getElementById('pub-lat').value = pos.coords.latitude;
+      document.getElementById('pub-lng').value = pos.coords.longitude;
+      if (msg) { msg.textContent = '✓ Position enregistrée (zone approximative)'; msg.style.color = '#27500A'; }
+    },
+    (err) => {
+      if (msg) { msg.textContent = 'Géolocalisation refusée ou indisponible — publication possible sans position'; msg.style.color = '#791F1F'; }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
 async function previewPhotos(e) {
   const files = Array.from(e.target.files).slice(0, 5);
   const preview = document.getElementById('photos-preview');
@@ -1359,6 +1436,9 @@ async function publier() {
     quartier: document.getElementById('pub-quartier').value.trim(),
     equipements: equips,
   };
+  const lat = parseFloat(document.getElementById('pub-lat').value);
+  const lng = parseFloat(document.getElementById('pub-lng').value);
+  if (!isNaN(lat) && !isNaN(lng)) { data.latitude = lat; data.longitude = lng; }
   if (!data.titre || !data.prix || !data.quartier) return showMsg('pub-msg', 'Champs obligatoires manquants', 'error');
   try {
     showMsg('pub-msg', '<span class="spinner"></span> Publication...', 'info');
@@ -1399,9 +1479,10 @@ async function majProfil() {
   const planColors = { gratuit: '#888780', chercheur: '#0C447C', proprietaire: '#854F0B', agence_pro: '#3B6D11' };
   const planBg = { gratuit: '#F1EFE8', chercheur: '#E6F1FB', proprietaire: '#FAEEDA', agence_pro: '#EAF3DE' };
   const abo = currentUser.abonnement || 'gratuit';
+  const restants = Math.max(0, MESSAGES_GRATUITS_MAX - getMessagesGratuits());
   const planAvantages = {
-    gratuit: ['Consulter les annonces', 'Voir les prix et localisations'],
-    chercheur: ['Contacter les propriétaires', 'Accès aux coordonnées', 'Messagerie illimitée'],
+    gratuit: ['Consulter les annonces', 'Voir les prix et localisations', restants + ' contact' + (restants > 1 ? 's' : '') + ' gratuit' + (restants > 1 ? 's' : '') + ' restant' + (restants > 1 ? 's' : '') + ' ce mois-ci'],
+    chercheur: ['Contacter les propriétaires sans limite', 'Accès aux coordonnées', 'Messagerie illimitée'],
     proprietaire: ['Publier jusqu\'à 5 annonces', 'Contacter les chercheurs', 'Statistiques de vues'],
     agence_pro: ['Annonces illimitées', 'Badge agence vérifiée', 'Support prioritaire'],
   };
