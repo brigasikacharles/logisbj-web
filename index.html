@@ -15,9 +15,7 @@
 <meta property="og:title" content="LogisBJ — Logements vérifiés au Bénin">
 <meta property="og:description" content="Trouvez votre prochain logement vérifié au Bénin. Studios, appartements, boutiques et ateliers.">
 <meta property="og:type" content="website">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<!-- Leaflet, Socket.io et KKiaPay sont chargés à la demande (voir chargerLeaflet/chargerSocketIO/chargerKkiapay) -->
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F7F5F0; color: #1a1814; font-size: 14px; overflow-x: hidden; }
@@ -228,7 +226,6 @@ body.in-conversation .app { padding-bottom: 0; }
   .modal { border-radius: 18px; max-width: 500px; }
   .modal-detail-wrap { border-radius: 18px; max-width: 600px; max-height: 90vh; }
 }</style>
-<script src="https://cdn.kkiapay.me/k.js"></script>
 </head>
 <body>
 <div id="offline-banner" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:60;background:#633806;color:#fff;text-align:center;font-size:12px;padding:7px 12px;">📴 Mode hors ligne — données du <span id="offline-date"></span></div>
@@ -405,6 +402,46 @@ const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
 const APP_VERSION = '2026-07-11-1';
+
+// ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
+const _assetCache = {};
+function chargerScript(url) {
+  if (_assetCache[url]) return _assetCache[url];
+  _assetCache[url] = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = url; s.async = true;
+    s.onload = resolve;
+    s.onerror = () => { delete _assetCache[url]; reject(new Error('Échec de chargement : ' + url)); };
+    document.head.appendChild(s);
+  });
+  return _assetCache[url];
+}
+function chargerCSS(url) {
+  if (_assetCache[url]) return _assetCache[url];
+  _assetCache[url] = new Promise((resolve, reject) => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = url;
+    l.onload = resolve;
+    l.onerror = () => { delete _assetCache[url]; reject(new Error('Échec CSS : ' + url)); };
+    document.head.appendChild(l);
+  });
+  return _assetCache[url];
+}
+async function chargerLeaflet() {
+  if (window.L) return;
+  await Promise.all([
+    chargerCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'),
+    chargerScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'),
+  ]);
+}
+async function chargerSocketIO() {
+  if (window.io) return;
+  await chargerScript('https://cdn.socket.io/4.7.5/socket.io.min.js');
+}
+async function chargerKkiapay() {
+  if (window.openKkiapayWidget) return;
+  await chargerScript('https://cdn.kkiapay.me/k.js');
+}
 document.getElementById('api-url').textContent = API_URL;
 
 let token = localStorage.getItem('logisbj_token');
@@ -417,6 +454,7 @@ let filtres = { ville: '', categorie: '', recherche: '', prixMin: 0, prixMax: 0,
 let map = null;
 let markersLayer = null;
 let prixTimeout = null;
+let rechercheTimeout = null;
 
 const VILLES = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon'];
 const VILLES_COORDS = {
@@ -548,8 +586,10 @@ function majUI() {
   else { pill.style.display = 'none'; }
 }
 
-function initSocket() {
+async function initSocket() {
   if (!token) return;
+  try { await chargerSocketIO(); } catch (e) { console.warn('Socket.io non chargé:', e); return; }
+  if (!token) return; // l'utilisateur a pu se déconnecter pendant le chargement
   socket = io(API_BASE, { auth: { token }, transports: ['websocket', 'polling'] });
   socket.on('connect', () => { socket.emit('rejoindre:conversations'); });
   socket.on('message:recu', (msg) => {
@@ -678,10 +718,12 @@ function rechercherAnnonces(val) {
   const clear = document.getElementById('search-clear');
   if (clear) clear.style.display = val.length > 0 ? 'block' : 'none';
   filtres.recherche = val.toLowerCase().trim();
-  chargerAnnonces();
+  clearTimeout(rechercheTimeout);
+  rechercheTimeout = setTimeout(() => chargerAnnonces(), 400);
 }
 
 function viderRecherche() {
+  clearTimeout(rechercheTimeout);
   document.getElementById('search-input').value = '';
   document.getElementById('search-clear').style.display = 'none';
   filtres.recherche = '';
@@ -1012,16 +1054,22 @@ function partagerAnnonce(id) {
   else { navigator.clipboard.writeText(url).then(() => showToast('Lien copié !')); }
 }
 
-function initCarte() {
+async function initCarte() {
   if (map) return;
-  setTimeout(() => {
-    map = L.map('map').setView([6.3703, 2.3912], 12);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap contributors © CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
-    markersLayer = L.layerGroup().addTo(map);
-    const bar = document.getElementById('carte-villes-bar');
-    bar.innerHTML = VILLES.map((v, i) => '<div class="carte-ville-chip ' + (i === 0 ? 'active' : '') + '" onclick="centrerVille(\'' + v + '\', this)">' + v + '</div>').join('');
-    chargerMarqueurs();
-  }, 100);
+  const mapEl = document.getElementById('map');
+  try {
+    await chargerLeaflet();
+  } catch (e) {
+    if (mapEl) mapEl.innerHTML = '<div class="loading">Carte indisponible (connexion). Réessayez plus tard.</div>';
+    return;
+  }
+  map = L.map('map').setView([6.3703, 2.3912], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap contributors © CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+  const bar = document.getElementById('carte-villes-bar');
+  bar.innerHTML = VILLES.map((v, i) => '<div class="carte-ville-chip ' + (i === 0 ? 'active' : '') + '" onclick="centrerVille(\'' + v + '\', this)">' + v + '</div>').join('');
+  chargerMarqueurs();
+  setTimeout(() => { if (map) map.invalidateSize(); }, 100);
 }
 
 function centrerVille(ville, el) {
@@ -1203,11 +1251,12 @@ async function publier() {
   } catch (err) { showMsg('pub-msg', esc(err.message), 'error'); }
 }
 
-function ouvrirPaiement(plan) {
+async function ouvrirPaiement(plan) {
   if (!currentUser) return showScreen('connexion');
   const plans = { chercheur: { montant: 2000, label: 'Chercheur' }, proprietaire: { montant: 5000, label: 'Propriétaire' }, agence_pro: { montant: 15000, label: 'Agence Pro' } };
   const planSelectionne = plan || 'proprietaire';
   const { montant: prix, label } = plans[planSelectionne];
+  try { await chargerKkiapay(); } catch (e) { return showToast('Paiement indisponible — vérifiez votre connexion'); }
   openKkiapayWidget({ amount: prix, api_key: "af73694ed79631b4f492041f0602837f1c872739", sandbox: false, email: currentUser.email || "", phone: currentUser.telephone || "", name: (currentUser.prenom || "") + " " + (currentUser.nom || ""), callback: "https://logisbj-web.vercel.app" });
   addSuccessListener(async function(response) {
     try {

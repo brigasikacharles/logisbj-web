@@ -12,11 +12,10 @@ const VERSION = new URL(self.location).searchParams.get('v') || 'dev';
 const CACHE_STATIC = 'logisbj-static-' + VERSION;
 const CACHE_API = 'logisbj-api-' + VERSION;
 
+// Leaflet/Socket.io/KKiaPay ne sont PAS préchargés : ils sont chargés à la demande
+// côté app, puis mis en cache par la stratégie stale-while-revalidate (cas 4 ci-dessous).
 const ASSETS_STATIQUES = [
-  '/', '/index.html', '/manifest.json', '/icon.svg',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-  'https://cdn.socket.io/4.7.5/socket.io.min.js'
+  '/', '/index.html', '/manifest.json', '/icon.svg'
 ];
 
 // ─── Installation ────────────────────────────
