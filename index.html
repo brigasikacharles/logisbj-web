@@ -1104,16 +1104,16 @@ function incrementerMessagesGratuits() {
   return count;
 }
 function abonnementActif() {
-  return ['chercheur', 'proprietaire', 'agence_pro'].includes(currentUser?.abonnement);
+  return ['chercheur', 'proprietaire_starter', 'proprietaire', 'agence_pro'].includes(currentUser?.abonnement);
 }
 
 async function contacterProprio(annonceId, prenomProprio, titreAnnonce) {
   if (!currentUser) { fermerModal('modal-detail'); showScreen('connexion'); return; }
   const abonne = abonnementActif();
   if (!abonne && getMessagesGratuits() >= MESSAGES_GRATUITS_MAX) {
-    ouvrirConfirm('Vous avez utilisé vos ' + MESSAGES_GRATUITS_MAX + ' contacts gratuits ce mois-ci. Passez à l\'abonnement Chercheur (2 000 FCFA/mois) pour contacter les propriétaires sans limite.', () => {
+    ouvrirConfirm('Vous avez utilisé vos ' + MESSAGES_GRATUITS_MAX + ' contacts gratuits ce mois-ci. Passez à Chercheur Premium (1 000 FCFA/mois) pour contacter les propriétaires sans limite et recevoir des alertes.', () => {
       fermerModal('modal-detail'); ouvrirPaiement('chercheur');
-    }, 'Souscrire (2 000 FCFA)', 'Plus tard');
+    }, 'Souscrire (1 000 FCFA)', 'Plus tard');
     return;
   }
   try {
@@ -1332,8 +1332,8 @@ function ajouterMsgUI(msg) {
 function majPublier() {
   const c = document.getElementById('publier-content');
   if (!currentUser) { c.innerHTML = '<div class="alert alert-info">Connectez-vous pour publier.</div>'; return; }
-  if (!['proprietaire', 'agence_pro'].includes(currentUser.abonnement)) {
-    c.innerHTML = '<div class="alert alert-info">Abonnement Propriétaire ou Agence Pro requis.<br><br></div><button class="btn" onclick="ouvrirPaiement()">Souscrire un abonnement</button>';
+  if (!['proprietaire_starter', 'proprietaire', 'agence_pro'].includes(currentUser.abonnement)) {
+    c.innerHTML = '<div class="alert alert-info">Abonnement Propriétaire (Starter ou Pro) ou Agence requis.<br><br></div><button class="btn" onclick="ouvrirPlans()">Voir les plans</button>';
     return;
   }
   c.innerHTML = '<div class="card"><h3>Nouvelle annonce</h3><label>Catégorie</label><select id="pub-cat"><option>Studio</option><option>1Ch/Salon</option><option>2Ch/Salon</option><option>3Ch/Salon</option><option>Appartement</option><option>Boutique à louer</option><option>Atelier à louer</option></select><label>Titre</label><input id="pub-titre" placeholder="Ex: Studio meublé Cadjèhoun"><label>Description</label><textarea id="pub-desc" rows="3" placeholder="Décrivez le logement..."></textarea><div class="row"><div><label>Prix (FCFA)</label><input type="number" id="pub-prix" placeholder="45000"></div><div><label>Superficie (m²)</label><input type="number" id="pub-surf" placeholder="35"></div></div><label>Ville</label><select id="pub-ville"><option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option><option>Abomey-Calavi</option><option>Bohicon</option></select><label>Quartier</label><input id="pub-quartier" placeholder="Ex: Cadjèhoun"><label>Localisation GPS (optionnel)</label><input type="hidden" id="pub-lat"><input type="hidden" id="pub-lng"><button type="button" class="btn btn-secondary" onclick="capturerPosition()" style="margin-bottom:6px;">📍 Ma position</button><div id="pub-geo-msg" style="font-size:11px;color:#6b6560;margin-bottom:10px;">Aide les locataires à situer le bien (zone approximative uniquement).</div><label>Équipements</label><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="pub-equips">' +
@@ -1453,11 +1453,18 @@ async function publier() {
   } catch (err) { showMsg('pub-msg', esc(err.message), 'error'); }
 }
 
+const PLANS_TARIFS = {
+  chercheur:            { montant: 1000,  label: 'Chercheur Premium' },
+  proprietaire_starter: { montant: 3000,  label: 'Propriétaire Starter' },
+  proprietaire:         { montant: 6000,  label: 'Propriétaire Pro' },
+  agence_pro:           { montant: 12000, label: 'Agence' },
+};
+
 async function ouvrirPaiement(plan) {
   if (!currentUser) return showScreen('connexion');
-  const plans = { chercheur: { montant: 2000, label: 'Chercheur' }, proprietaire: { montant: 5000, label: 'Propriétaire' }, agence_pro: { montant: 15000, label: 'Agence Pro' } };
-  const planSelectionne = plan || 'proprietaire';
-  const { montant: prix, label } = plans[planSelectionne];
+  if (!PLANS_TARIFS[plan]) return ouvrirPlans();
+  const planSelectionne = plan;
+  const { montant: prix, label } = PLANS_TARIFS[planSelectionne];
   try { await chargerKkiapay(); } catch (e) { return showToast('Paiement indisponible — vérifiez votre connexion'); }
   openKkiapayWidget({ amount: prix, api_key: "af73694ed79631b4f492041f0602837f1c872739", sandbox: false, email: currentUser.email || "", phone: currentUser.telephone || "", name: (currentUser.prenom || "") + " " + (currentUser.nom || ""), callback: "https://logisbj-web.vercel.app", data: JSON.stringify({ user_id: currentUser?.id, plan: planSelectionne }) });
   addSuccessListener(async function(response) {
@@ -1475,18 +1482,69 @@ async function ouvrirPaiement(plan) {
   });
 }
 
+// ─── Écran de choix de plan ───────────────────────────────────
+function ouvrirPlans() {
+  const aboActuel = currentUser?.abonnement || 'gratuit';
+  const plans = [
+    { key: 'gratuit', label: 'Chercheur gratuit', prix: '0 FCFA', avantages: ['Consulter toutes les annonces', 'Prix et localisations', '3 contacts par mois'] },
+    { key: 'chercheur', label: 'Chercheur Premium', prix: '1 000 FCFA/mois', avantages: ['Contacts illimités', 'Alertes nouvelles annonces', 'Messagerie illimitée'] },
+    { key: 'proprietaire_starter', label: 'Propriétaire Starter', prix: '3 000 FCFA/mois', avantages: ['Jusqu\'à 2 annonces', 'Contacter les chercheurs', 'Vérification incluse'] },
+    { key: 'proprietaire', label: 'Propriétaire Pro', prix: '6 000 FCFA/mois', avantages: ['Jusqu\'à 5 annonces', 'Contacter les chercheurs', 'Statistiques de vues'] },
+    { key: 'agence_pro', label: 'Agence', prix: '12 000 FCFA/mois', avantages: ['Annonces illimitées', 'Badge agence vérifiée', 'Support prioritaire'] },
+  ];
+  const carte = (p) => {
+    const actuel = p.key === aboActuel;
+    return '<div class="card" style="margin-bottom:10px;' + (actuel ? 'border:1.5px solid #BA7517;' : '') + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<div style="font-size:14px;font-weight:700;">' + p.label + '</div>' +
+        '<div style="font-size:13px;font-weight:700;color:#BA7517;">' + p.prix + '</div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:' + (p.key === 'gratuit' || actuel ? '0' : '10px') + ';">' +
+        p.avantages.map(a => '<div style="font-size:12px;color:#4a4845;">✓ ' + a + '</div>').join('') +
+      '</div>' +
+      (actuel
+        ? '<div style="margin-top:10px;font-size:11px;font-weight:700;color:#BA7517;">Plan actuel</div>'
+        : (p.key === 'gratuit' ? '' : '<button class="btn" data-plan="' + p.key + '">Souscrire</button>')) +
+    '</div>';
+  };
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.style.display = 'flex';
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = '<div class="modal" style="max-height:85vh;overflow-y:auto;">' +
+    '<div style="font-size:16px;font-weight:700;margin-bottom:4px;">Choisir un plan</div>' +
+    '<div style="background:#EAF3DE;color:#3B6D11;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">Les agences prennent 1 mois de loyer. LogisBJ = 2 000 FCFA seulement.</div>' +
+    plans.map(carte).join('') +
+    '<div class="card" style="margin-bottom:10px;background:#FAEEDA;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<div style="font-size:14px;font-weight:700;">Payer à la validation</div>' +
+        '<div style="background:#854F0B;color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;">NOUVEAU</div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:#4a4845;line-height:1.5;">Payez 2 000 FCFA uniquement quand vous trouvez un locataire. Zéro risque.</div>' +
+      '<div style="margin-top:8px;font-size:11px;color:#854F0B;font-weight:600;">2 000 FCFA par mise en relation validée — bientôt disponible</div>' +
+    '</div>' +
+    '<button class="btn btn-ghost" data-role="fermer">Fermer</button>' +
+  '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('[data-role="fermer"]').onclick = () => ov.remove();
+  ov.querySelectorAll('[data-plan]').forEach(btn => {
+    btn.onclick = () => { ov.remove(); ouvrirPaiement(btn.dataset.plan); };
+  });
+}
+
 async function majProfil() {
   const c = document.getElementById('profil-content');
   if (!currentUser) { c.innerHTML = '<div class="alert alert-info">Connectez-vous d\'abord.</div>'; return; }
   const initiales = ((currentUser.prenom?.[0] || '') + (currentUser.nom?.[0] || '')).toUpperCase();
-  const planLabels = { gratuit: 'Gratuit', chercheur: 'Chercheur', proprietaire: 'Propriétaire', agence_pro: 'Agence Pro' };
-  const planColors = { gratuit: '#888780', chercheur: '#0C447C', proprietaire: '#854F0B', agence_pro: '#3B6D11' };
-  const planBg = { gratuit: '#F1EFE8', chercheur: '#E6F1FB', proprietaire: '#FAEEDA', agence_pro: '#EAF3DE' };
+  const planLabels = { gratuit: 'Gratuit', chercheur: 'Chercheur Premium', proprietaire_starter: 'Propriétaire Starter', proprietaire: 'Propriétaire Pro', agence_pro: 'Agence' };
+  const planColors = { gratuit: '#888780', chercheur: '#0C447C', proprietaire_starter: '#854F0B', proprietaire: '#854F0B', agence_pro: '#3B6D11' };
+  const planBg = { gratuit: '#F1EFE8', chercheur: '#E6F1FB', proprietaire_starter: '#FAEEDA', proprietaire: '#FAEEDA', agence_pro: '#EAF3DE' };
   const abo = currentUser.abonnement || 'gratuit';
   const restants = Math.max(0, MESSAGES_GRATUITS_MAX - getMessagesGratuits());
   const planAvantages = {
     gratuit: ['Consulter les annonces', 'Voir les prix et localisations', restants + ' contact' + (restants > 1 ? 's' : '') + ' gratuit' + (restants > 1 ? 's' : '') + ' restant' + (restants > 1 ? 's' : '') + ' ce mois-ci'],
-    chercheur: ['Contacter les propriétaires sans limite', 'Accès aux coordonnées', 'Messagerie illimitée'],
+    chercheur: ['Contacter les propriétaires sans limite', 'Alertes nouvelles annonces', 'Messagerie illimitée'],
+    proprietaire_starter: ['Publier jusqu\'à 2 annonces', 'Contacter les chercheurs', 'Vérification incluse'],
     proprietaire: ['Publier jusqu\'à 5 annonces', 'Contacter les chercheurs', 'Statistiques de vues'],
     agence_pro: ['Annonces illimitées', 'Badge agence vérifiée', 'Support prioritaire'],
   };
@@ -1513,7 +1571,7 @@ async function majProfil() {
         (planAvantages[abo] || []).map(a => '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#4a4845;"><div style="width:16px;height:16px;border-radius:50%;background:#EAF3DE;color:#3B6D11;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;">✓</div>' + a + '</div>').join('') +
       '</div>' +
       (currentUser.abo_expire_le ? '<div style="font-size:11px;color:#B4B2A9;margin-bottom:10px;">Expire le ' + new Date(currentUser.abo_expire_le).toLocaleDateString('fr-FR') + '</div>' : '') +
-      '<button class="btn btn-secondary" onclick="ouvrirPaiement()">Changer de plan →</button>' +
+      '<button class="btn btn-secondary" onclick="ouvrirPlans()">Changer de plan →</button>' +
     '</div>' +
     '<div class="card" style="padding:0;overflow:hidden;">' +
       '<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:0.5px solid #e8e4dc;cursor:pointer;" onclick="showScreen(\'annonces\')">' +
