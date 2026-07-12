@@ -227,7 +227,34 @@ body.in-conversation .app { padding-bottom: 0; }
   .modal-overlay { align-items: center; z-index: 1000 !important; }#screen-carte { z-index: 1; }
   .modal { border-radius: 18px; max-width: 500px; }
   .modal-detail-wrap { border-radius: 18px; max-width: 600px; max-height: 90vh; }
-}</style>
+}
+/* ─── Tunnel d'onboarding ─── */
+/* z-index au-dessus de #reveil-serveur (9999) : le tunnel est statique et n'a pas besoin du backend avant l'inscription */
+#onboarding { position: fixed; inset: 0; z-index: 10000; background: #F7F5F0; display: none; transition: opacity .35s ease; }
+#onboarding.visible { display: block; }
+.onb-wrap { max-width: 480px; margin: 0 auto; height: 100%; position: relative; overflow: hidden; }
+.onb-screen { position: absolute; inset: 0; padding: 36px 24px; display: flex; flex-direction: column; opacity: 0; transform: translateX(48px); transition: opacity .35s ease, transform .35s ease; pointer-events: none; overflow-y: auto; }
+.onb-screen.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+.onb-screen.sortie { opacity: 0; transform: translateX(-48px); }
+@keyframes onbFade { from { opacity: 0; } to { opacity: 1; } }
+#onb-splash { justify-content: center; align-items: center; text-align: center; animation: onbFade 1s ease; cursor: pointer; }
+.onb-slogan { font-size: 20px; font-weight: 700; color: #1a1814; margin: 22px 0 10px; }
+.onb-sous-titre { font-size: 13px; color: #6b6560; line-height: 1.6; max-width: 300px; margin: 0 auto 28px; }
+.onb-titre { font-size: 22px; font-weight: 700; margin: 18px 0 4px; }
+.onb-role-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+.onb-role-card { background: #fff; border: 1.5px solid #e8e4dc; border-radius: 16px; padding: 20px 14px; cursor: pointer; text-align: center; transition: transform .15s ease; }
+.onb-role-card:active { transform: scale(.96); }
+.onb-role-card .ico { font-size: 30px; margin-bottom: 10px; }
+.onb-role-card .titre { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.onb-role-card .desc { font-size: 11px; color: #6b6560; line-height: 1.5; margin-bottom: 10px; }
+.onb-role-card .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px; }
+.onb-role-card.bleu { border-top: 4px solid #0C447C; }
+.onb-role-card.bleu .tag { background: #E6F1FB; color: #0C447C; }
+.onb-role-card.orange { border-top: 4px solid #BA7517; }
+.onb-role-card.orange .tag { background: #FAEEDA; color: #854F0B; }
+.onb-lien { text-align: center; font-size: 12px; color: #6b6560; margin-top: auto; padding-top: 22px; }
+.onb-lien a { color: #BA7517; font-weight: 700; cursor: pointer; text-decoration: none; }
+.onb-cgu { text-align: center; font-size: 11px; color: #B4B2A9; margin-top: 14px; }</style>
 </head>
 <body>
 <div id="offline-banner" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:60;background:#633806;color:#fff;text-align:center;font-size:12px;padding:7px 12px;">📴 Mode hors ligne — données du <span id="offline-date"></span></div>
@@ -406,12 +433,83 @@ body.in-conversation .app { padding-bottom: 0; }
   </div>
 </div>
 
+<!-- ─── Tunnel d'onboarding (visiteurs non connectés) ─── -->
+<div id="onboarding">
+  <div class="onb-wrap">
+
+    <!-- Écran 1 : splash (3 s puis auto-avance, ou clic) -->
+    <div class="onb-screen active" id="onb-splash" onclick="onbAller('role')">
+      <svg width="92" height="92" viewBox="0 0 88 88" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="0" width="88" height="88" rx="18" fill="#BA7517"/>
+        <polygon points="44,10 76,34 12,34" fill="rgba(255,255,255,0.2)"/>
+        <polygon points="44,14 74,36 14,36" fill="white"/>
+        <rect x="18" y="36" width="52" height="38" rx="2" fill="white"/>
+        <rect x="33" y="44" width="18" height="30" rx="2" fill="#BA7517"/>
+        <circle cx="62" cy="24" r="7" fill="white"/>
+        <circle cx="62" cy="24" r="4" fill="#BA7517"/>
+        <line x1="62" y1="31" x2="62" y2="37" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div style="font-size:30px;font-weight:700;margin-top:14px;"><span style="color:#BA7517;">Logis</span><span style="color:#1a1814;">BJ</span></div>
+      <div class="onb-slogan">Le logement vérifié, c'est LogisBJ</div>
+      <div class="onb-sous-titre">Trouvez ou proposez un logement en toute confiance au Bénin et en Afrique de l'Ouest</div>
+      <button class="btn" style="max-width:240px;" onclick="event.stopPropagation();onbAller('role')">Commencer</button>
+    </div>
+
+    <!-- Écran 2 : choix du rôle -->
+    <div class="onb-screen" id="onb-role">
+      <div class="onb-titre">Vous êtes ?</div>
+      <div class="onb-role-cards">
+        <div class="onb-role-card bleu" onclick="onbChoisirRole('chercheur')">
+          <div class="ico">🔍</div>
+          <div class="titre">Je cherche un logement</div>
+          <div class="desc">Trouvez studios, appartements, maisons vérifiés</div>
+          <div class="tag">3 contacts gratuits par mois</div>
+        </div>
+        <div class="onb-role-card orange" onclick="onbChoisirRole('proprietaire')">
+          <div class="ico">🏠</div>
+          <div class="titre">Je propose un logement</div>
+          <div class="desc">Publiez votre bien et trouvez des locataires sérieux</div>
+          <div class="tag">À partir de 3 000 FCFA/mois</div>
+        </div>
+      </div>
+      <div class="onb-lien">Déjà inscrit ? <a onclick="onbConnexion()">Se connecter</a></div>
+    </div>
+
+    <!-- Écran 3 : inscription adaptée au rôle (3A chercheur / 3B propriétaire) -->
+    <div class="onb-screen" id="onb-form">
+      <div class="onb-titre" id="onb-form-titre"></div>
+      <div style="font-size:13px;color:#6b6560;margin-bottom:16px;" id="onb-form-soustitre"></div>
+      <div id="onb-form-champs">
+        <label>Prénom</label><input type="text" id="onb-prenom" placeholder="Votre prénom">
+        <div id="onb-nom-wrap" style="display:none;"><label>Nom</label><input type="text" id="onb-nom" placeholder="Votre nom"></div>
+        <label>Téléphone</label><input type="tel" id="onb-tel" placeholder="+229..." autocomplete="tel">
+        <label>Mot de passe</label><input type="password" id="onb-pwd" placeholder="6 caractères minimum" autocomplete="new-password">
+        <label>Ville</label><select id="onb-ville"></select>
+        <button class="btn" id="onb-btn-inscrire" onclick="onbInscrire()"></button>
+        <div id="onb-msg"></div>
+        <div class="onb-cgu">En continuant, vous acceptez nos CGU</div>
+      </div>
+      <div id="onb-otp" style="display:none;">
+        <div class="card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Vérifiez votre numéro</div>
+          <div style="font-size:12px;color:#6b6560;margin-bottom:12px;">Un code à 5 chiffres vous a été envoyé par SMS.</div>
+          <label>Code SMS</label><input type="tel" id="onb-otp-code" placeholder="12345" maxlength="5" inputmode="numeric">
+          <button class="btn" onclick="onbVerifierOtp()">Valider</button>
+          <div id="onb-otp-msg"></div>
+          <div class="onb-lien" style="padding-top:12px;"><a onclick="onbRenvoyerOtp()">Renvoyer le code</a></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <script>
 const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-11-1';
+const APP_VERSION = '2026-07-12-1';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -1602,6 +1700,90 @@ async function majProfil() {
 
 function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
 
+// ─── Tunnel d'onboarding ──────────────────────────────────────
+const ONB_VILLES = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon', 'Natitingou', 'Abomey', 'Lokossa', 'Ouidah', 'Kandi', 'Djougou', 'Dassa-Zoumé', 'Savè', 'Pobè', 'Sakété', 'Comè', 'Dogbo', 'Bembèrèkè', 'Malanville', 'Nikki', 'Autre ville du Bénin', 'Togo', 'Côte d\'Ivoire', 'Sénégal', 'Autre pays'];
+let onbRole = 'chercheur';
+let onbTimerSplash = null;
+
+function ouvrirOnboarding() {
+  document.getElementById('onb-ville').innerHTML = ONB_VILLES.map(v => '<option>' + esc(v) + '</option>').join('');
+  document.getElementById('onboarding').classList.add('visible');
+  onbTimerSplash = setTimeout(() => onbAller('role'), 3000);
+}
+
+// Transition avant (slide + fade) — pas de retour en arrière
+function onbAller(nom) {
+  clearTimeout(onbTimerSplash);
+  const cible = document.getElementById('onb-' + nom);
+  if (!cible || cible.classList.contains('active')) return;
+  document.querySelectorAll('.onb-screen.active').forEach(s => {
+    s.classList.remove('active'); s.classList.add('sortie');
+    setTimeout(() => s.classList.remove('sortie'), 400);
+  });
+  cible.classList.add('active');
+}
+
+function onbChoisirRole(role) {
+  onbRole = role;
+  const chercheur = role === 'chercheur';
+  document.getElementById('onb-form-titre').textContent = chercheur ? 'Créez votre compte' : 'Proposez votre bien';
+  document.getElementById('onb-form-soustitre').textContent = chercheur ? 'Gratuit — 3 contacts offerts chaque mois' : 'Rejoignez des milliers de propriétaires au Bénin';
+  document.getElementById('onb-nom-wrap').style.display = chercheur ? 'none' : 'block';
+  document.getElementById('onb-btn-inscrire').textContent = chercheur ? 'Créer mon compte gratuitement' : 'Commencer à publier';
+  onbAller('form');
+}
+
+function fermerOnboarding() {
+  clearTimeout(onbTimerSplash);
+  const o = document.getElementById('onboarding');
+  o.style.opacity = '0';
+  setTimeout(() => { o.classList.remove('visible'); o.style.opacity = ''; }, 350);
+}
+
+function onbConnexion() { fermerOnboarding(); showScreen('connexion'); }
+
+async function onbInscrire() {
+  const prenom = document.getElementById('onb-prenom').value.trim();
+  // Le backend exige un nom : pour les chercheurs (formulaire sans nom), on réutilise le prénom
+  const nom = onbRole === 'chercheur' ? prenom : document.getElementById('onb-nom').value.trim();
+  const tel = document.getElementById('onb-tel').value.trim();
+  const pwd = document.getElementById('onb-pwd').value;
+  const ville = document.getElementById('onb-ville').value;
+  if (!prenom || !nom || !tel || !pwd) return showMsg('onb-msg', 'Remplissez tous les champs', 'error');
+  if (pwd.length < 6) return showMsg('onb-msg', 'Mot de passe : 6 caractères minimum', 'error');
+  try {
+    showMsg('onb-msg', '<span class="spinner"></span> Création du compte...', 'info');
+    await api('/auth/inscription', 'POST', { nom, prenom, telephone: tel, mot_de_passe: pwd, role: onbRole, ville });
+    document.getElementById('onb-form-champs').style.display = 'none';
+    document.getElementById('onb-otp').style.display = 'block';
+  } catch (err) { showMsg('onb-msg', esc(err.message), 'error'); }
+}
+
+async function onbVerifierOtp() {
+  const tel = document.getElementById('onb-tel').value.trim();
+  const code = document.getElementById('onb-otp-code').value.trim();
+  if (!code) return showMsg('onb-otp-msg', 'Entrez le code reçu par SMS', 'error');
+  try {
+    const data = await api('/auth/verifier-otp', 'POST', { telephone: tel, otp: code });
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem('logisbj_token', token);
+    if (data.refreshToken) localStorage.setItem('logisbj_refresh', data.refreshToken);
+    localStorage.setItem('logisbj_user', JSON.stringify(currentUser));
+    majUI(); initSocket();
+    fermerOnboarding();
+    showScreen('annonces');
+    showToast('🎉 Bienvenue sur LogisBJ, ' + (currentUser.prenom || '') + ' !');
+  } catch (err) { showMsg('onb-otp-msg', esc(err.message), 'error'); }
+}
+
+async function onbRenvoyerOtp() {
+  try {
+    await api('/auth/renvoyer-otp', 'POST', { telephone: document.getElementById('onb-tel').value.trim() });
+    showMsg('onb-otp-msg', 'Nouveau code envoyé par SMS');
+  } catch (err) { showMsg('onb-otp-msg', esc(err.message), 'error'); }
+}
+
 async function init() {
   await attendreServeur();
   setInterval(pingAPI, 14 * 60 * 1000);
@@ -1646,6 +1828,8 @@ async function posterAvis(annonceId) {
   } catch (err) { showToast(err.message || 'Erreur lors de la publication'); }
 }
 
+// Tunnel d'onboarding : affiché à chaque visite tant que l'utilisateur n'est pas connecté
+if (!currentUser) ouvrirOnboarding();
 init();
 </script>
 <script type="module">
