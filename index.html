@@ -1459,12 +1459,16 @@ async function ouvrirPaiement(plan) {
   const planSelectionne = plan || 'proprietaire';
   const { montant: prix, label } = plans[planSelectionne];
   try { await chargerKkiapay(); } catch (e) { return showToast('Paiement indisponible — vérifiez votre connexion'); }
-  openKkiapayWidget({ amount: prix, api_key: "af73694ed79631b4f492041f0602837f1c872739", sandbox: false, email: currentUser.email || "", phone: currentUser.telephone || "", name: (currentUser.prenom || "") + " " + (currentUser.nom || ""), callback: "https://logisbj-web.vercel.app" });
+  openKkiapayWidget({ amount: prix, api_key: "af73694ed79631b4f492041f0602837f1c872739", sandbox: false, email: currentUser.email || "", phone: currentUser.telephone || "", name: (currentUser.prenom || "") + " " + (currentUser.nom || ""), callback: "https://logisbj-web.vercel.app", data: JSON.stringify({ user_id: currentUser?.id, plan: planSelectionne }) });
   addSuccessListener(async function(response) {
     try {
-      await api('/paiements/confirmer-kkiapay', 'POST', { transaction_id: response.transactionId, plan: planSelectionne, montant: prix });
-      currentUser.abonnement = planSelectionne;
-      localStorage.setItem('logisbj_user', JSON.stringify(currentUser));
+      await api('/paiements/confirmer-kkiapay', 'POST', { transaction_id: response.transactionId, plan: planSelectionne });
+      // L'abonnement fait foi côté serveur : on recharge le profil au lieu de le déduire localement
+      try {
+        const me = await api('/auth/me');
+        currentUser = me.user;
+        localStorage.setItem('logisbj_user', JSON.stringify(currentUser));
+      } catch (e) { console.warn('Rafraîchissement du profil impossible :', e); }
       majUI();
       showToast('✅ Paiement réussi ! Abonnement ' + label + ' activé.');
     } catch (err) { showToast('Erreur : ' + err.message); }
