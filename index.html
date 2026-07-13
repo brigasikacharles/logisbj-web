@@ -509,7 +509,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-13-2';
+const APP_VERSION = '2026-07-13-3';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -1601,7 +1601,7 @@ const PLANS_TARIFS = {
   agence_pro:           { montant: 12000, label: 'Agence', abonnement: true },
   // Services à l'acte (flux de paiement backend à venir — non payables via le widget abonnement)
   commission_mise_en_relation: { montant: 10000, label: 'Mise en relation garantie', abonnement: false, payeur: 'locataire' },
-  gestion_mensuelle:           { montant: null, taux: 0.05, label: 'Gestion locative complète (5% du loyer)', abonnement: false, payeur: 'proprietaire' },
+  gestion_mensuelle:           { montant: null, taux: 0.08, label: 'Gestion locative complète (8% du loyer)', abonnement: false, payeur: 'proprietaire' },
   contrat_bail:                { montant: 3000,  label: 'Contrat de bail numérique', abonnement: false },
   suivi_loyers:                { montant: 1500,  label: 'Suivi des loyers', abonnement: false },
 };
@@ -1647,11 +1647,24 @@ function ouvrirPlans() {
       { label: 'Propriétaire Starter', prix: '3 000 FCFA/mois', desc: 'Jusqu\'à 2 annonces + badge prioritaire', plan: 'proprietaire_starter' },
       { label: 'Propriétaire Pro', prix: '6 000 FCFA/mois', desc: 'Jusqu\'à 5 annonces + statistiques', plan: 'proprietaire' },
       { label: 'Agence', prix: '12 000 FCFA/mois', desc: 'Annonces illimitées + badge agence', plan: 'agence_pro' },
-      { label: 'Gestion locative complète', prix: '5% du loyer/mois', desc: 'Suivi complet de votre bien et de vos locataires', bientot: true },
+      { diaspora: true },
       { label: 'Suivi des loyers', prix: '1 500 FCFA/mois', desc: 'Relances et quittances automatiques', bientot: true },
     ],
   };
+  const WHATSAPP_DIASPORA = 'https://wa.me/2290140948109?text=Bonjour%20LogisBJ%2C%20je%20suis%20propri%C3%A9taire%20de%20la%20diaspora%20et%20je%20souhaite%20g%C3%A9rer%20mon%20bien%20au%20B%C3%A9nin%20%C3%A0%20distance.';
+  const encartDiaspora =
+    '<div class="card" style="margin-bottom:10px;background:#FAEEDA;border:1.5px solid #BA7517;">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+        '<div style="width:36px;height:36px;border-radius:10px;background:#BA7517;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">🏠</div>' +
+        '<div style="font-size:14px;font-weight:700;">🌍 Propriétaire de la diaspora ?</div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:#4a4845;line-height:1.6;margin-bottom:6px;">Vous vivez en France, Italie, USA ou ailleurs ? LogisBJ gère votre bien au Bénin à votre place.</div>' +
+      '<div style="font-size:11.5px;color:#854F0B;font-weight:600;margin-bottom:4px;">Rapports photos mensuels · Suivi des loyers · Recherche de locataires</div>' +
+      '<div style="font-size:12.5px;font-weight:700;color:#854F0B;">Commission : 8% du loyer mensuel</div>' +
+      '<a href="' + WHATSAPP_DIASPORA + '" target="_blank" rel="noopener" class="btn-whatsapp" style="text-decoration:none;">' + iconeWhatsApp() + ' Nous contacter sur WhatsApp</a>' +
+    '</div>';
   const carte = (o) => {
+    if (o.diaspora) return encartDiaspora;
     const actuel = o.plan && o.plan === aboActuel;
     return '<div class="card" style="margin-bottom:10px;' + (actuel ? 'border:1.5px solid #BA7517;' : '') + '">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">' +
