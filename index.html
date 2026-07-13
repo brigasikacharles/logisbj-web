@@ -509,7 +509,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-12-1';
+const APP_VERSION = '2026-07-13-1';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -1090,6 +1090,7 @@ function afficherPage(page) {
           '</div>' +
           '<div class="annonce-mini-prix">' + a.prix.toLocaleString() + ' <span class="unit">FCFA/mois</span></div>' +
           '<div class="annonce-mini-lieu">📍 ' + esc(a.quartier) + ', ' + esc(a.ville) + '</div>' +
+          (a.equipements?.legal?.conforme === true ? '<div style="display:inline-block;font-size:9.5px;font-weight:700;color:#27500A;background:#EAF3DE;padding:1px 6px;border-radius:6px;margin-top:3px;">✓ Conforme loi 2021-02</div>' : '') +
           (a.note_moyenne > 0 ? '<div style="font-size:10px;color:#BA7517;margin-top:2px;">★ ' + esc(a.note_moyenne) + '</div>' : '') +
         '</div>' +
       '</div>';
@@ -1106,7 +1107,8 @@ async function ouvrirDetail(id) {
     annonceDetailCourante = a;
     const avis = data.avis || [];
     const photos = a.photos || [];
-    const equips = a.equipements ? Object.keys(a.equipements).filter(k => a.equipements[k]) : [];
+    const equips = a.equipements ? Object.keys(a.equipements).filter(k => k !== 'legal' && a.equipements[k] === true) : [];
+    const legal = a.equipements?.legal || null;
     const detailAccent = a.statut === 'disponible' ? '#1D9E75' : a.statut === 'en_cours' ? '#EF9F27' : a.statut === 'indisponible' ? '#E24B4A' : '#378ADD';
     const detailAvatarBg = a.statut === 'disponible' ? '#EAF3DE' : a.statut === 'en_cours' ? '#FAEEDA' : a.statut === 'indisponible' ? '#FCEBEB' : '#E6F1FB';
     const detailAvatarColor = a.statut === 'disponible' ? '#3B6D11' : a.statut === 'en_cours' ? '#854F0B' : a.statut === 'indisponible' ? '#A32D2D' : '#0C447C';
@@ -1138,6 +1140,8 @@ async function ouvrirDetail(id) {
           '<div class="kpi"><div class="kpi-val" style="color:#BA7517;">' + (a.note_moyenne > 0 ? '★ ' + esc(a.note_moyenne) : '—') + '</div><div class="kpi-lbl">' + (parseInt(a.nb_avis) || 0) + ' avis</div></div>' +
         '</div>' +
         (a.verifie ? '<div class="alert alert-success">✓ Offre vérifiée par LogisBJ — Documents contrôlés</div>' : '') +
+        (legal?.conforme === true ? '<div class="alert alert-success">✓ Conforme loi 2021-02 — caution ≤ 3 mois de loyer, pas de frais illégaux</div>' : '') +
+        (legal && (legal.caution || legal.mois_prepayes) ? '<div style="font-size:12px;color:#4a4845;margin-bottom:8px;">' + (legal.caution ? 'Caution demandée : <b>' + parseInt(legal.caution).toLocaleString() + ' FCFA</b>' : '') + (legal.caution && legal.mois_prepayes ? ' · ' : '') + (legal.mois_prepayes ? 'Mois prépayés : <b>' + parseInt(legal.mois_prepayes) + '</b>' : '') + '</div>' : '') +
         (a.description ? '<div class="section-title">Description</div><div style="font-size:13px;color:#4a4845;line-height:1.6;">' + esc(a.description) + '</div>' : '') +
         (equips.length > 0 ? '<div class="section-title">Équipements</div><div class="equip-grid">' + equips.map(e => '<div class="equip-chip">' + (EQUIP_LABELS[e] || esc(e)) + '</div>').join('') + '</div>' : '') +
         '<div class="section-title">Propriétaire</div>' +
@@ -1434,7 +1438,7 @@ function majPublier() {
     c.innerHTML = '<div class="alert alert-info">Abonnement Propriétaire (Starter ou Pro) ou Agence requis.<br><br></div><button class="btn" onclick="ouvrirPlans()">Voir les plans</button>';
     return;
   }
-  c.innerHTML = '<div class="card"><h3>Nouvelle annonce</h3><label>Catégorie</label><select id="pub-cat"><option>Studio</option><option>1Ch/Salon</option><option>2Ch/Salon</option><option>3Ch/Salon</option><option>Appartement</option><option>Boutique à louer</option><option>Atelier à louer</option></select><label>Titre</label><input id="pub-titre" placeholder="Ex: Studio meublé Cadjèhoun"><label>Description</label><textarea id="pub-desc" rows="3" placeholder="Décrivez le logement..."></textarea><div class="row"><div><label>Prix (FCFA)</label><input type="number" id="pub-prix" placeholder="45000"></div><div><label>Superficie (m²)</label><input type="number" id="pub-surf" placeholder="35"></div></div><label>Ville</label><select id="pub-ville"><option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option><option>Abomey-Calavi</option><option>Bohicon</option></select><label>Quartier</label><input id="pub-quartier" placeholder="Ex: Cadjèhoun"><label>Localisation GPS (optionnel)</label><input type="hidden" id="pub-lat"><input type="hidden" id="pub-lng"><button type="button" class="btn btn-secondary" onclick="capturerPosition()" style="margin-bottom:6px;">📍 Ma position</button><div id="pub-geo-msg" style="font-size:11px;color:#6b6560;margin-bottom:10px;">Aide les locataires à situer le bien (zone approximative uniquement).</div><label>Équipements</label><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="pub-equips">' +
+  c.innerHTML = '<div class="card"><h3>Nouvelle annonce</h3><label>Catégorie</label><select id="pub-cat"><option>Studio</option><option>1Ch/Salon</option><option>2Ch/Salon</option><option>3Ch/Salon</option><option>Appartement</option><option>Boutique à louer</option><option>Atelier à louer</option></select><label>Titre</label><input id="pub-titre" placeholder="Ex: Studio meublé Cadjèhoun"><label>Description</label><textarea id="pub-desc" rows="3" placeholder="Décrivez le logement..."></textarea><div class="row"><div><label>Prix (FCFA)</label><input type="number" id="pub-prix" placeholder="45000" oninput="verifierLegalite()"></div><div><label>Superficie (m²)</label><input type="number" id="pub-surf" placeholder="35"></div></div><div class="row"><div><label>Caution demandée (FCFA)</label><input type="number" id="pub-caution" placeholder="90000" oninput="verifierLegalite()"></div><div><label>Mois prépayés demandés</label><input type="number" id="pub-prepayes" placeholder="1" oninput="verifierLegalite()"></div></div><div id="pub-legal-warn"></div><div style="display:flex;gap:8px;align-items:flex-start;margin:4px 0 10px;"><input type="checkbox" id="pub-conditions" style="width:auto;margin-top:2px;" onchange="verifierLegalite()"><label for="pub-conditions" style="font-size:12px;color:#4a4845;font-weight:400;">Je confirme que mes conditions respectent la loi béninoise (caution max 3 mois)</label></div><label>Ville</label><select id="pub-ville"><option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option><option>Abomey-Calavi</option><option>Bohicon</option></select><label>Quartier</label><input id="pub-quartier" placeholder="Ex: Cadjèhoun"><label>Localisation GPS (optionnel)</label><input type="hidden" id="pub-lat"><input type="hidden" id="pub-lng"><button type="button" class="btn btn-secondary" onclick="capturerPosition()" style="margin-bottom:6px;">📍 Ma position</button><div id="pub-geo-msg" style="font-size:11px;color:#6b6560;margin-bottom:10px;">Aide les locataires à situer le bien (zone approximative uniquement).</div><label>Équipements</label><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="pub-equips">' +
     Object.keys(EQUIP_LABELS).map(e => '<div class="chip" data-eq="' + e + '" onclick="this.classList.toggle(\'active\')">' + EQUIP_LABELS[e] + '</div>').join('') +
     '</div><label>Photos</label><div class="uploader" onclick="document.getElementById(\'pub-photos\').click()"><div class="uploader-emoji">📷</div><div style="font-size:13px;color:#6b6560;">Ajouter des photos</div><div style="font-size:11px;color:#B4B2A9;margin-top:4px;">Maximum 5 photos</div></div><input type="file" id="pub-photos" accept="image/*" multiple style="display:none;" onchange="previewPhotos(event)"><div class="photos-preview" id="photos-preview"></div><button class="btn" onclick="publier()" style="margin-top:14px;">Publier l\'annonce</button><div id="pub-msg"></div></div>';
 }
@@ -1521,9 +1525,41 @@ function retirerPhoto(i) {
   renderPreviewPhotos();
 }
 
+// ─── Vérification loi n°2021-02 sur le formulaire de publication ─
+// Retourne true si les conditions déclarées sont conformes (caution ≤ 3 mois, ≤ 3 mois prépayés)
+function verifierLegalite() {
+  const warn = document.getElementById('pub-legal-warn');
+  if (!warn) return true;
+  const prix = parseInt(document.getElementById('pub-prix').value) || 0;
+  const caution = parseInt(document.getElementById('pub-caution').value) || 0;
+  const prepayes = parseInt(document.getElementById('pub-prepayes').value) || 0;
+  const messages = [];
+  if (prix > 0 && caution > 3 * prix) {
+    messages.push('<div style="background:#FCEBEB;color:#A32D2D;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:600;margin-bottom:6px;">⚠️ Caution supérieure à 3 mois de loyer — c\'est illégal (loi n°2021-02, caution max 3 mois)</div>');
+  }
+  if (prepayes > 3) {
+    messages.push('<div style="background:#FCEBEB;color:#A32D2D;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:600;margin-bottom:6px;">⚠️ Attention : cela peut être illégal (mois prépayés excessifs)</div>');
+  }
+  warn.innerHTML = messages.join('');
+  return messages.length === 0;
+}
+
 async function publier() {
   const equips = {};
   document.querySelectorAll('#pub-equips .chip.active').forEach(c => { equips[c.dataset.eq] = true; });
+  // Conditions légales (loi 2021-02) — stockées dans equipements.legal (JSONB backend)
+  const conditionsLegales = document.getElementById('pub-conditions')?.checked || false;
+  const cautionFcfa = parseInt(document.getElementById('pub-caution')?.value) || null;
+  const moisPrepayes = parseInt(document.getElementById('pub-prepayes')?.value) || null;
+  const prixMensuel = parseInt(document.getElementById('pub-prix').value) || 0;
+  equips.legal = {
+    conditions_legales: conditionsLegales,
+    caution: cautionFcfa,
+    mois_prepayes: moisPrepayes,
+    conforme: conditionsLegales &&
+      (!cautionFcfa || (prixMensuel > 0 && cautionFcfa <= 3 * prixMensuel)) &&
+      (!moisPrepayes || moisPrepayes <= 3)
+  };
   const data = {
     categorie_nom: document.getElementById('pub-cat').value,
     titre: document.getElementById('pub-titre').value.trim(),
@@ -1551,16 +1587,25 @@ async function publier() {
   } catch (err) { showMsg('pub-msg', esc(err.message), 'error'); }
 }
 
+// Tarifs LogisBJ — conformité loi n°2021-02 (bail à usage d'habitation, Bénin)
 const PLANS_TARIFS = {
-  chercheur:            { montant: 1000,  label: 'Chercheur Premium' },
-  proprietaire_starter: { montant: 3000,  label: 'Propriétaire Starter' },
-  proprietaire:         { montant: 6000,  label: 'Propriétaire Pro' },
-  agence_pro:           { montant: 12000, label: 'Agence' },
+  // Abonnements mensuels (clés = enum backend, payables via KKiaPay)
+  chercheur:            { montant: 1000,  label: 'Chercheur Premium', abonnement: true },
+  proprietaire_starter: { montant: 3000,  label: 'Propriétaire Starter', abonnement: true },
+  proprietaire:         { montant: 6000,  label: 'Propriétaire Pro', abonnement: true },
+  agence_pro:           { montant: 12000, label: 'Agence', abonnement: true },
+  // Services à l'acte (flux de paiement backend à venir — non payables via le widget abonnement)
+  commission_mise_en_relation: { montant: 10000, label: 'Mise en relation garantie', abonnement: false, payeur: 'locataire' },
+  gestion_mensuelle:           { montant: null, taux: 0.05, label: 'Gestion locative complète (5% du loyer)', abonnement: false, payeur: 'proprietaire' },
+  contrat_bail:                { montant: 3000,  label: 'Contrat de bail numérique', abonnement: false },
+  suivi_loyers:                { montant: 1500,  label: 'Suivi des loyers', abonnement: false },
 };
 
 async function ouvrirPaiement(plan) {
   if (!currentUser) return showScreen('connexion');
-  if (!PLANS_TARIFS[plan]) return ouvrirPlans();
+  // Seuls les abonnements mensuels passent par le widget KKiaPay :
+  // les services à l'acte n'ont pas encore de flux backend (l'argent serait encaissé sans activation)
+  if (!PLANS_TARIFS[plan] || !PLANS_TARIFS[plan].abonnement) return ouvrirPlans();
   const planSelectionne = plan;
   const { montant: prix, label } = PLANS_TARIFS[planSelectionne];
   try { await chargerKkiapay(); } catch (e) { return showToast('Paiement indisponible — vérifiez votre connexion'); }
@@ -1580,54 +1625,64 @@ async function ouvrirPaiement(plan) {
   });
 }
 
-// ─── Écran de choix de plan ───────────────────────────────────
+// ─── Écran "Services LogisBJ" (2 onglets : chercher / proposer) ─
+const MENTION_LEGALE = 'LogisBJ opère conformément à la loi n°2021-02 portant régime juridique du bail à usage d\'habitation domestique au Bénin';
+
 function ouvrirPlans() {
   const aboActuel = currentUser?.abonnement || 'gratuit';
-  const plans = [
-    { key: 'gratuit', label: 'Chercheur gratuit', prix: '0 FCFA', avantages: ['Consulter toutes les annonces', 'Prix et localisations', '3 contacts par mois'] },
-    { key: 'chercheur', label: 'Chercheur Premium', prix: '1 000 FCFA/mois', avantages: ['Contacts illimités', 'Alertes nouvelles annonces', 'Messagerie illimitée'] },
-    { key: 'proprietaire_starter', label: 'Propriétaire Starter', prix: '3 000 FCFA/mois', avantages: ['Jusqu\'à 2 annonces', 'Contacter les chercheurs', 'Vérification incluse'] },
-    { key: 'proprietaire', label: 'Propriétaire Pro', prix: '6 000 FCFA/mois', avantages: ['Jusqu\'à 5 annonces', 'Contacter les chercheurs', 'Statistiques de vues'] },
-    { key: 'agence_pro', label: 'Agence', prix: '12 000 FCFA/mois', avantages: ['Annonces illimitées', 'Badge agence vérifiée', 'Support prioritaire'] },
-  ];
-  const carte = (p) => {
-    const actuel = p.key === aboActuel;
+  const offres = {
+    chercher: [
+      { label: 'Consulter les annonces', prix: 'Gratuit', desc: '3 contacts par mois inclus', gratuit: true },
+      { label: 'Alertes instantanées', prix: '1 000 FCFA/mois', desc: 'Nouvelles annonces en temps réel + contacts illimités', plan: 'chercheur' },
+      { label: 'Mise en relation garantie', prix: '10 000 FCFA', desc: 'Paiement unique à la mise en relation', bientot: true },
+      { label: 'Contrat de bail numérique officiel', prix: '3 000 FCFA', desc: 'Conforme loi 2021-02 — IFU bailleur et locataire', bientot: true },
+    ],
+    proposer: [
+      { label: 'Publier une annonce', prix: 'Gratuit', desc: '1 annonce', gratuit: true },
+      { label: 'Propriétaire Starter', prix: '3 000 FCFA/mois', desc: 'Jusqu\'à 2 annonces + badge prioritaire', plan: 'proprietaire_starter' },
+      { label: 'Propriétaire Pro', prix: '6 000 FCFA/mois', desc: 'Jusqu\'à 5 annonces + statistiques', plan: 'proprietaire' },
+      { label: 'Agence', prix: '12 000 FCFA/mois', desc: 'Annonces illimitées + badge agence', plan: 'agence_pro' },
+      { label: 'Gestion locative complète', prix: '5% du loyer/mois', desc: 'Suivi complet de votre bien et de vos locataires', bientot: true },
+      { label: 'Suivi des loyers', prix: '1 500 FCFA/mois', desc: 'Relances et quittances automatiques', bientot: true },
+    ],
+  };
+  const carte = (o) => {
+    const actuel = o.plan && o.plan === aboActuel;
     return '<div class="card" style="margin-bottom:10px;' + (actuel ? 'border:1.5px solid #BA7517;' : '') + '">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-        '<div style="font-size:14px;font-weight:700;">' + p.label + '</div>' +
-        '<div style="font-size:13px;font-weight:700;color:#BA7517;">' + p.prix + '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">' +
+        '<div style="font-size:13.5px;font-weight:700;">' + o.label + '</div>' +
+        '<div style="font-size:12.5px;font-weight:700;color:#BA7517;white-space:nowrap;">' + o.prix + '</div>' +
       '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:' + (p.key === 'gratuit' || actuel ? '0' : '10px') + ';">' +
-        p.avantages.map(a => '<div style="font-size:12px;color:#4a4845;">✓ ' + a + '</div>').join('') +
-      '</div>' +
-      (actuel
-        ? '<div style="margin-top:10px;font-size:11px;font-weight:700;color:#BA7517;">Plan actuel</div>'
-        : (p.key === 'gratuit' ? '' : '<button class="btn" data-plan="' + p.key + '">Souscrire</button>')) +
+      '<div style="font-size:12px;color:#4a4845;margin-bottom:' + (o.plan && !actuel ? '10px' : '0') + ';">' + o.desc + '</div>' +
+      (actuel ? '<div style="margin-top:8px;font-size:11px;font-weight:700;color:#BA7517;">Plan actuel</div>' :
+        o.plan ? '<button class="btn" data-plan="' + o.plan + '">Souscrire</button>' :
+        o.bientot ? '<div style="margin-top:8px;display:inline-block;background:#F1EFE8;color:#888780;padding:3px 10px;border-radius:8px;font-size:10px;font-weight:700;">BIENTÔT DISPONIBLE</div>' : '') +
     '</div>';
   };
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
   ov.style.display = 'flex';
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
-  ov.innerHTML = '<div class="modal" style="max-height:85vh;overflow-y:auto;">' +
-    '<div style="font-size:16px;font-weight:700;margin-bottom:4px;">Choisir un plan</div>' +
-    '<div style="background:#EAF3DE;color:#3B6D11;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:600;margin-bottom:12px;">Les agences prennent 1 mois de loyer. LogisBJ = 2 000 FCFA seulement.</div>' +
-    plans.map(carte).join('') +
-    '<div class="card" style="margin-bottom:10px;background:#FAEEDA;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-        '<div style="font-size:14px;font-weight:700;">Payer à la validation</div>' +
-        '<div style="background:#854F0B;color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;">NOUVEAU</div>' +
-      '</div>' +
-      '<div style="font-size:12px;color:#4a4845;line-height:1.5;">Payez 2 000 FCFA uniquement quand vous trouvez un locataire. Zéro risque.</div>' +
-      '<div style="margin-top:8px;font-size:11px;color:#854F0B;font-weight:600;">2 000 FCFA par mise en relation validée — bientôt disponible</div>' +
+  const ongletDefaut = ['proprietaire', 'agence'].includes(currentUser?.role) ? 'proposer' : 'chercher';
+  const rendu = (onglet) =>
+    '<div style="font-size:16px;font-weight:700;margin-bottom:10px;">Services LogisBJ</div>' +
+    '<div style="display:flex;gap:6px;margin-bottom:12px;">' +
+      '<button class="btn ' + (onglet === 'chercher' ? '' : 'btn-ghost') + '" data-onglet="chercher" style="font-size:12px;padding:9px 6px;">Je cherche un logement</button>' +
+      '<button class="btn ' + (onglet === 'proposer' ? '' : 'btn-ghost') + '" data-onglet="proposer" style="font-size:12px;padding:9px 6px;">Je propose un logement</button>' +
     '</div>' +
-    '<button class="btn btn-ghost" data-role="fermer">Fermer</button>' +
-  '</div>';
+    offres[onglet].map(carte).join('') +
+    '<div style="font-size:10px;color:#B4B2A9;text-align:center;line-height:1.5;margin:10px 0;">' + MENTION_LEGALE + '</div>' +
+    '<button class="btn btn-ghost" data-role="fermer">Fermer</button>';
+  const brancher = () => {
+    ov.querySelector('[data-role="fermer"]').onclick = () => ov.remove();
+    ov.querySelectorAll('[data-onglet]').forEach(b => { b.onclick = () => { boite.innerHTML = rendu(b.dataset.onglet); brancher(); }; });
+    ov.querySelectorAll('[data-plan]').forEach(btn => { btn.onclick = () => { ov.remove(); ouvrirPaiement(btn.dataset.plan); }; });
+  };
+  ov.innerHTML = '<div class="modal" style="max-height:85vh;overflow-y:auto;"></div>';
+  const boite = ov.querySelector('.modal');
+  boite.innerHTML = rendu(ongletDefaut);
   document.body.appendChild(ov);
-  ov.querySelector('[data-role="fermer"]').onclick = () => ov.remove();
-  ov.querySelectorAll('[data-plan]').forEach(btn => {
-    btn.onclick = () => { ov.remove(); ouvrirPaiement(btn.dataset.plan); };
-  });
+  brancher();
 }
 
 async function majProfil() {
@@ -1689,13 +1744,43 @@ async function majProfil() {
         '<div style="flex:1;font-size:13px;font-weight:600;">Récemment consultés <span style="background:#888780;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px;">' + getHistorique().length + '</span></div>' +
         '<div style="color:#B4B2A9;font-size:16px;">›</div>' +
       '</div>' +
-      '<div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;" onclick="showToast(\'Support : +229 97 00 00 00\')">' +
+      '<div style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;" onclick="ouvrirAide()">' +
         '<div style="width:34px;height:34px;border-radius:10px;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:16px;">🎧</div>' +
         '<div style="flex:1;font-size:13px;font-weight:600;">Aide & Support</div><div style="color:#B4B2A9;font-size:16px;">›</div>' +
       '</div>' +
     '</div>' +
     '<button class="btn btn-secondary" onclick="demanderPermissionNotifications()" style="margin-bottom:8px;">🔔 Activer les notifications</button>' +
-    '<button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:2px;">Se déconnecter</button>';
+    '<button class="btn btn-danger" onclick="seDeconnecter()" style="margin-top:2px;">Se déconnecter</button>' +
+    '<div style="font-size:10px;color:#B4B2A9;text-align:center;line-height:1.5;margin-top:16px;padding:0 8px;">' + MENTION_LEGALE + '</div>';
+}
+
+// ─── Aide & Support + droits légaux des locataires ────────────
+function ouvrirAide() {
+  const droit = (ok, texte) => '<div style="display:flex;gap:8px;font-size:12.5px;color:#4a4845;line-height:1.5;margin-bottom:7px;"><div style="flex-shrink:0;">' + (ok ? '✅' : '❌') + '</div><div>' + texte + '</div></div>';
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.style.display = 'flex';
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = '<div class="modal" style="max-height:85vh;overflow-y:auto;">' +
+    '<div style="font-size:16px;font-weight:700;margin-bottom:10px;">Aide & Support</div>' +
+    '<div class="card"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">🎧 Nous contacter</div>' +
+      '<div style="font-size:12.5px;color:#4a4845;">Support : +229 97 00 00 00</div></div>' +
+    '<div class="card">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:8px;">⚖️ Vos droits légaux</div>' +
+      '<div style="font-size:12px;font-weight:600;color:#1a1814;margin-bottom:8px;">Loi n°2021-02 — Ce que dit la loi béninoise :</div>' +
+      droit(true, 'Caution maximum : 3 mois de loyer') +
+      droit(true, 'Loyer annuel : maximum 8% de la valeur du bien') +
+      droit(true, 'Commission agent : maximum 50% d\'un loyer mensuel') +
+      droit(true, 'Contrat de bail : doit mentionner l\'IFU du bailleur et du locataire') +
+      droit(true, 'Récupération caution : dans les 2 mois après départ') +
+      droit(false, 'Les mois prépayés excessifs sont illégaux') +
+      droit(false, 'Les cautions eau/électricité excessives sont illégales') +
+    '</div>' +
+    '<div style="font-size:10px;color:#B4B2A9;text-align:center;line-height:1.5;margin:10px 0;">' + MENTION_LEGALE + '</div>' +
+    '<button class="btn btn-ghost" data-role="fermer">Fermer</button>' +
+  '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('[data-role="fermer"]').onclick = () => ov.remove();
 }
 
 function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
