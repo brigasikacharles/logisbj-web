@@ -509,7 +509,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-13-3';
+const APP_VERSION = '2026-07-13-4';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -1601,7 +1601,8 @@ const PLANS_TARIFS = {
   agence_pro:           { montant: 12000, label: 'Agence', abonnement: true },
   // Services à l'acte (flux de paiement backend à venir — non payables via le widget abonnement)
   commission_mise_en_relation: { montant: 10000, label: 'Mise en relation garantie', abonnement: false, payeur: 'locataire' },
-  gestion_mensuelle:           { montant: null, taux: 0.08, label: 'Gestion locative complète (8% du loyer)', abonnement: false, payeur: 'proprietaire' },
+  gestion_locale:              { montant: null, taux: 0.05, label: 'Gestion locative locale (5% du loyer)', abonnement: false, payeur: 'proprietaire' },
+  gestion_diaspora:            { montant: null, taux: 0.08, label: 'Gestion locative diaspora (8% du loyer)', abonnement: false, payeur: 'proprietaire' },
   contrat_bail:                { montant: 3000,  label: 'Contrat de bail numérique', abonnement: false },
   suivi_loyers:                { montant: 1500,  label: 'Suivi des loyers', abonnement: false },
 };
@@ -1647,6 +1648,7 @@ function ouvrirPlans() {
       { label: 'Propriétaire Starter', prix: '3 000 FCFA/mois', desc: 'Jusqu\'à 2 annonces + badge prioritaire', plan: 'proprietaire_starter' },
       { label: 'Propriétaire Pro', prix: '6 000 FCFA/mois', desc: 'Jusqu\'à 5 annonces + statistiques', plan: 'proprietaire' },
       { label: 'Agence', prix: '12 000 FCFA/mois', desc: 'Annonces illimitées + badge agence', plan: 'agence_pro' },
+      { label: '🏠 Gestion locative locale', prix: '5% du loyer/mois', desc: 'Vous êtes au Bénin ? On gère vos loyers, rappels et contrats.', bientot: true },
       { diaspora: true },
       { label: 'Suivi des loyers', prix: '1 500 FCFA/mois', desc: 'Relances et quittances automatiques', bientot: true },
     ],
