@@ -509,7 +509,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-13-4';
+const APP_VERSION = '2026-07-13-5';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -1648,8 +1648,7 @@ function ouvrirPlans() {
       { label: 'Propriétaire Starter', prix: '3 000 FCFA/mois', desc: 'Jusqu\'à 2 annonces + badge prioritaire', plan: 'proprietaire_starter' },
       { label: 'Propriétaire Pro', prix: '6 000 FCFA/mois', desc: 'Jusqu\'à 5 annonces + statistiques', plan: 'proprietaire' },
       { label: 'Agence', prix: '12 000 FCFA/mois', desc: 'Annonces illimitées + badge agence', plan: 'agence_pro' },
-      { label: '🏠 Gestion locative locale', prix: '5% du loyer/mois', desc: 'Vous êtes au Bénin ? On gère vos loyers, rappels et contrats.', bientot: true },
-      { diaspora: true },
+      { duoGestion: true },
       { label: 'Suivi des loyers', prix: '1 500 FCFA/mois', desc: 'Relances et quittances automatiques', bientot: true },
     ],
   };
@@ -1665,7 +1664,22 @@ function ouvrirPlans() {
       '<div style="font-size:12.5px;font-weight:700;color:#854F0B;">Commission : 8% du loyer mensuel</div>' +
       '<a href="' + WHATSAPP_DIASPORA + '" target="_blank" rel="noopener" class="btn-whatsapp" style="text-decoration:none;">' + iconeWhatsApp() + ' Nous contacter sur WhatsApp</a>' +
     '</div>';
+  // Les deux offres de gestion côte à côte (grille 2 colonnes)
+  const carteGestionLocale =
+    '<div class="card" style="margin-bottom:0;display:flex;flex-direction:column;">' +
+      '<div style="font-size:22px;margin-bottom:6px;">🏠</div>' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:4px;">Gestion locative locale</div>' +
+      '<div style="font-size:12px;font-weight:700;color:#BA7517;margin-bottom:6px;">5% du loyer/mois</div>' +
+      '<div style="font-size:11.5px;color:#4a4845;line-height:1.5;flex:1;">Vous êtes au Bénin ? On gère vos loyers, rappels et contrats.</div>' +
+      '<div style="margin-top:8px;"><span style="display:inline-block;background:#F1EFE8;color:#888780;padding:3px 10px;border-radius:8px;font-size:10px;font-weight:700;">BIENTÔT DISPONIBLE</span></div>' +
+    '</div>';
+  const duoGestion =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;margin-bottom:10px;">' +
+      carteGestionLocale +
+      encartDiaspora.replace('style="margin-bottom:10px;', 'style="margin-bottom:0;display:flex;flex-direction:column;') +
+    '</div>';
   const carte = (o) => {
+    if (o.duoGestion) return duoGestion;
     if (o.diaspora) return encartDiaspora;
     const actuel = o.plan && o.plan === aboActuel;
     return '<div class="card" style="margin-bottom:10px;' + (actuel ? 'border:1.5px solid #BA7517;' : '') + '">' +
