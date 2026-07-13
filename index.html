@@ -509,7 +509,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-13-5';
+const APP_VERSION = '2026-07-13-6';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -1753,6 +1753,7 @@ async function majProfil() {
       '<div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;color:#fff;">' + esc(currentUser.prenom) + ' ' + esc(currentUser.nom) + '</div><div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;">' + esc(currentUser.telephone) + '</div><div style="margin-top:8px;display:inline-block;background:rgba(255,255,255,0.2);color:#fff;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;">' + esc(currentUser.role) + '</div></div>' +
     '</div>' +
     stats +
+    (currentUser.role === 'admin' ? '<button class="btn" style="background:#1a1814;margin-bottom:10px;" onclick="ouvrirAdmin()">⚙️ Administration</button>' : '') +
     '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div style="font-size:13px;font-weight:700;">Abonnement actuel</div><div style="background:' + planBg[abo] + ';color:' + planColors[abo] + ';padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;">' + planLabels[abo] + '</div></div>' +
       '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">' +
         (planAvantages[abo] || []).map(a => '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#4a4845;"><div style="width:16px;height:16px;border-radius:50%;background:#EAF3DE;color:#3B6D11;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;">✓</div>' + a + '</div>').join('') +
@@ -1815,6 +1816,120 @@ function ouvrirAide() {
   '</div>';
   document.body.appendChild(ov);
   ov.querySelector('[data-role="fermer"]').onclick = () => ov.remove();
+}
+
+// ─── Interface d'administration (role admin) ──────────────────
+let adminFiltreStatut = 'toutes';
+
+function ouvrirAdmin() {
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.style.display = 'flex';
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  ov.innerHTML = '<div class="modal" style="max-height:88vh;overflow-y:auto;">' +
+    '<div style="font-size:16px;font-weight:700;margin-bottom:10px;">⚙️ Administration</div>' +
+    '<div style="display:flex;gap:6px;margin-bottom:12px;">' +
+      '<button class="btn btn-ghost" data-onglet-admin="annonces" style="font-size:12px;padding:9px 4px;">Annonces</button>' +
+      '<button class="btn btn-ghost" data-onglet-admin="stats" style="font-size:12px;padding:9px 4px;">Stats</button>' +
+      '<button class="btn btn-ghost" data-onglet-admin="users" style="font-size:12px;padding:9px 4px;">Utilisateurs</button>' +
+    '</div>' +
+    '<div id="admin-contenu"></div>' +
+    '<button class="btn btn-ghost" data-role="fermer" style="margin-top:8px;">Fermer</button>' +
+  '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('[data-role="fermer"]').onclick = () => ov.remove();
+  ov.querySelectorAll('[data-onglet-admin]').forEach(b => { b.onclick = () => adminOnglet(b.dataset.ongletAdmin); });
+  adminOnglet('annonces');
+}
+
+async function adminOnglet(onglet) {
+  const c = document.getElementById('admin-contenu');
+  if (!c) return;
+  c.innerHTML = '<div class="loading"><span class="spinner"></span> Chargement...</div>';
+  try {
+    if (onglet === 'annonces') await adminRendreAnnonces();
+    else if (onglet === 'stats') await adminRendreStats();
+    else await adminRendreUsers();
+  } catch (err) { c.innerHTML = '<div class="alert alert-error">' + esc(err.message) + '</div>'; }
+}
+
+async function adminRendreAnnonces() {
+  const c = document.getElementById('admin-contenu');
+  const param = adminFiltreStatut !== 'toutes' ? '?statut=' + adminFiltreStatut : '';
+  const data = await api('/admin/annonces' + param);
+  const statutCouleurs = { en_attente: ['#E6F1FB', '#0C447C'], disponible: ['#EAF3DE', '#27500A'], en_cours: ['#FAEEDA', '#854F0B'], indisponible: ['#FCEBEB', '#A32D2D'], rejetee: ['#FCEBEB', '#A32D2D'] };
+  c.innerHTML =
+    '<select style="margin-bottom:10px;" onchange="adminFiltreStatut=this.value;adminOnglet(\'annonces\')">' +
+      ['toutes', 'en_attente', 'disponible', 'indisponible'].map(s => '<option value="' + s + '"' + (s === adminFiltreStatut ? ' selected' : '') + '>' + (s === 'toutes' ? 'Toutes les annonces' : s) + '</option>').join('') +
+    '</select>' +
+    (data.annonces.length === 0 ? '<div class="alert alert-info">Aucune annonce pour ce filtre.</div>' :
+    data.annonces.map(a => {
+      const [bg, col] = statutCouleurs[a.statut] || ['#F1EFE8', '#888780'];
+      return '<div class="card" style="margin-bottom:8px;">' +
+        '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-size:13px;font-weight:700;">' + esc(a.titre || a.categorie) + '</div>' +
+            '<div style="font-size:11.5px;color:#6b6560;margin-top:2px;">' + esc(a.ville) + ' · ' + parseInt(a.prix).toLocaleString() + ' FCFA · ' + esc(a.proprietaire) + '</div>' +
+          '</div>' +
+          '<div style="background:' + bg + ';color:' + col + ';padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap;">' + esc(a.statut) + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;margin-top:10px;">' +
+          '<button class="btn" style="background:#3B6D11;font-size:11px;padding:8px 4px;" onclick="adminValider(\'' + escJs(a.id) + '\')">Valider</button>' +
+          '<button class="btn" style="background:#BA7517;font-size:11px;padding:8px 4px;" onclick="adminRejeter(\'' + escJs(a.id) + '\')">Rejeter</button>' +
+          '<button class="btn" style="background:#A32D2D;font-size:11px;padding:8px 4px;" onclick="adminSupprimer(\'' + escJs(a.id) + '\', \'' + escJs(a.titre || '') + '\')">Supprimer</button>' +
+        '</div>' +
+      '</div>';
+    }).join(''));
+}
+
+async function adminValider(id) {
+  try {
+    // Passe par la validation admin complète : verifie=TRUE + statut disponible + publie_le
+    await api('/admin/annonces/' + id + '/valider', 'PUT', { action: 'approuver' });
+    showToast('✅ Annonce validée et publiée');
+    adminOnglet('annonces');
+  } catch (err) { showToast('Erreur : ' + err.message); }
+}
+
+async function adminRejeter(id) {
+  try {
+    await api('/annonces/' + id + '/statut', 'PATCH', { statut: 'indisponible' });
+    showToast('Annonce passée en indisponible');
+    adminOnglet('annonces');
+  } catch (err) { showToast('Erreur : ' + err.message); }
+}
+
+function adminSupprimer(id, titre) {
+  ouvrirConfirm('Supprimer définitivement l\'annonce « ' + (titre || 'sans titre') + ' » (conversations et avis inclus) ? Cette action est irréversible.', async () => {
+    try {
+      await api('/annonces/' + id, 'DELETE');
+      showToast('🗑️ Annonce supprimée');
+      adminOnglet('annonces');
+    } catch (err) { showToast('Erreur : ' + err.message); }
+  }, 'Supprimer', 'Annuler');
+}
+
+async function adminRendreStats() {
+  const c = document.getElementById('admin-contenu');
+  const d = await api('/admin/stats');
+  const tuile = (val, lbl) => '<div style="background:#F1EFE8;border-radius:12px;padding:14px;"><div style="font-size:20px;font-weight:700;">' + val + '</div><div style="font-size:11px;color:#6b6560;margin-top:2px;">' + lbl + '</div></div>';
+  c.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+    tuile(d.annonces.total ?? '—', 'Annonces au total') +
+    tuile(d.users.total, 'Utilisateurs inscrits') +
+    tuile(d.users.abonnes_actifs ?? '—', 'Abonnements actifs') +
+    tuile(parseInt(d.revenus.mois_courant).toLocaleString() + ' F', 'Revenus du mois') +
+  '</div>';
+}
+
+async function adminRendreUsers() {
+  const c = document.getElementById('admin-contenu');
+  const d = await api('/admin/utilisateurs?limite=20');
+  c.innerHTML = (d.utilisateurs || []).map(u =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 2px;border-bottom:0.5px solid #e8e4dc;">' +
+      '<div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:600;">' + esc(u.prenom) + ' ' + esc(u.nom) + '</div>' +
+      '<div style="font-size:10.5px;color:#6b6560;">' + esc(u.role) + ' · ' + esc(u.abonnement) + '</div></div>' +
+      '<div style="font-size:10.5px;color:#B4B2A9;white-space:nowrap;">' + new Date(u.cree_le).toLocaleDateString('fr-FR') + '</div>' +
+    '</div>').join('') || '<div class="alert alert-info">Aucun utilisateur.</div>';
 }
 
 function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
