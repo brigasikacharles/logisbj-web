@@ -509,7 +509,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-13-6';
+const APP_VERSION = '2026-07-13-7';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -586,7 +586,11 @@ async function api(path, method = 'GET', body, isFormData = false) {
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(API_URL + path, { method, headers, body: body ? (isFormData ? body : JSON.stringify(body)) : undefined });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Erreur réseau');
+  if (!res.ok) {
+    const err = new Error(data.error || 'Erreur réseau');
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
@@ -1739,11 +1743,11 @@ async function majProfil() {
   if (currentUser.role === 'admin') {
     try {
       const data = await api('/admin/stats');
-      stats = '<div class="card" style="background:#1a1814;color:#fff;"><div style="font-size:11px;font-weight:700;color:#BA7517;margin-bottom:10px;letter-spacing:0.5px;">TABLEAU DE BORD ADMIN</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
-        '<div style="background:rgba(255,255,255,0.08);padding:10px;border-radius:10px;"><div style="font-size:20px;font-weight:700;">' + data.users.total + '</div><div style="font-size:10px;color:#B4B2A9;">Utilisateurs</div></div>' +
-        '<div style="background:rgba(255,255,255,0.08);padding:10px;border-radius:10px;"><div style="font-size:20px;font-weight:700;">' + data.annonces.publiees + '</div><div style="font-size:10px;color:#B4B2A9;">Annonces actives</div></div>' +
-        '<div style="background:rgba(255,255,255,0.08);padding:10px;border-radius:10px;"><div style="font-size:20px;font-weight:700;">' + data.annonces.en_attente + '</div><div style="font-size:10px;color:#B4B2A9;">En attente</div></div>' +
-        '<div style="background:rgba(255,255,255,0.08);padding:10px;border-radius:10px;"><div style="font-size:14px;font-weight:700;">' + parseInt(data.revenus.total_cumule).toLocaleString() + '</div><div style="font-size:10px;color:#B4B2A9;">FCFA cumulés</div></div>' +
+      stats = '<div class="card" style="background:#ffffff;"><div style="font-size:11px;font-weight:700;color:#BA7517;margin-bottom:10px;letter-spacing:0.5px;">TABLEAU DE BORD ADMIN</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+        tuileStat('👥', data.users.total, 'Utilisateurs', '#E6F1FB', '#0C447C', 22) +
+        tuileStat('🏠', data.annonces.publiees, 'Annonces actives', '#FAEEDA', '#BA7517', 22) +
+        tuileStat('⏳', data.annonces.en_attente, 'En attente', '#EAF3DE', '#3B6D11', 22) +
+        tuileStat('💰', parseInt(data.revenus.total_cumule).toLocaleString(), 'FCFA cumulés', '#FFF8EE', '#B8860B', 22) +
         '</div></div>';
     } catch {}
   }
@@ -1820,29 +1824,41 @@ function ouvrirAide() {
 
 // ─── Interface d'administration (role admin) ──────────────────
 let adminFiltreStatut = 'toutes';
+let adminOngletActif = 'annonces';
 
 function ouvrirAdmin() {
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
+  ov.id = 'modal-admin';
   ov.style.display = 'flex';
+  ov.style.alignItems = 'center';
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
-  ov.innerHTML = '<div class="modal" style="max-height:88vh;overflow-y:auto;">' +
-    '<div style="font-size:16px;font-weight:700;margin-bottom:10px;">⚙️ Administration</div>' +
-    '<div style="display:flex;gap:6px;margin-bottom:12px;">' +
-      '<button class="btn btn-ghost" data-onglet-admin="annonces" style="font-size:12px;padding:9px 4px;">Annonces</button>' +
-      '<button class="btn btn-ghost" data-onglet-admin="stats" style="font-size:12px;padding:9px 4px;">Stats</button>' +
-      '<button class="btn btn-ghost" data-onglet-admin="users" style="font-size:12px;padding:9px 4px;">Utilisateurs</button>' +
-    '</div>' +
-    '<div id="admin-contenu"></div>' +
-    '<button class="btn btn-ghost" data-role="fermer" style="margin-top:8px;">Fermer</button>' +
-  '</div>';
+  ov.innerHTML =
+    '<div style="width:90vw;max-width:90vw;height:90vh;max-height:90vh;background:#ffffff;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #e8e4dc;flex-shrink:0;background:#ffffff;">' +
+        '<div style="font-size:16px;font-weight:700;color:#1a1814;">⚙️ Administration</div>' +
+        '<button data-role="fermer" style="width:32px;height:32px;border-radius:16px;border:0;background:#F1EFE8;color:#4a4845;font-size:15px;cursor:pointer;font-family:inherit;">✕</button>' +
+      '</div>' +
+      '<div id="admin-onglets" style="display:flex;gap:6px;padding:12px 16px 0;flex-shrink:0;background:#ffffff;">' +
+        [['annonces', '🏠 Annonces'], ['stats', '📊 Stats'], ['users', '👥 Utilisateurs']].map(([k, l]) =>
+          '<button data-onglet-admin="' + k + '" style="flex:1;border:0;border-radius:10px;padding:10px 4px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;">' + l + '</button>'
+        ).join('') +
+      '</div>' +
+      '<div id="admin-contenu" style="flex:1;overflow-y:auto;padding:14px 16px 20px;background:#ffffff;"></div>' +
+    '</div>';
   document.body.appendChild(ov);
   ov.querySelector('[data-role="fermer"]').onclick = () => ov.remove();
   ov.querySelectorAll('[data-onglet-admin]').forEach(b => { b.onclick = () => adminOnglet(b.dataset.ongletAdmin); });
-  adminOnglet('annonces');
+  adminOnglet(adminOngletActif);
 }
 
 async function adminOnglet(onglet) {
+  adminOngletActif = onglet;
+  document.querySelectorAll('#admin-onglets [data-onglet-admin]').forEach(b => {
+    const actif = b.dataset.ongletAdmin === onglet;
+    b.style.background = actif ? '#BA7517' : '#F1EFE8';
+    b.style.color = actif ? '#ffffff' : '#4a4845';
+  });
   const c = document.getElementById('admin-contenu');
   if (!c) return;
   c.innerHTML = '<div class="loading"><span class="spinner"></span> Chargement...</div>';
@@ -1850,36 +1866,59 @@ async function adminOnglet(onglet) {
     if (onglet === 'annonces') await adminRendreAnnonces();
     else if (onglet === 'stats') await adminRendreStats();
     else await adminRendreUsers();
-  } catch (err) { c.innerHTML = '<div class="alert alert-error">' + esc(err.message) + '</div>'; }
+  } catch (err) {
+    if (err.status === 401) {
+      document.getElementById('modal-admin')?.remove();
+      showToast('Session expirée, veuillez vous reconnecter');
+      showScreen('connexion');
+      return;
+    }
+    c.innerHTML = '<div class="alert alert-error">' + esc(err.message) + '</div>';
+  }
 }
+
+const ADMIN_STATUT_BADGES = {
+  disponible: ['#EAF3DE', '#27500A'],
+  en_attente: ['#FAEEDA', '#854F0B'],
+  en_cours: ['#FAEEDA', '#854F0B'],
+  indisponible: ['#FCEBEB', '#A32D2D'],
+  rejetee: ['#FCEBEB', '#A32D2D'],
+};
 
 async function adminRendreAnnonces() {
   const c = document.getElementById('admin-contenu');
   const param = adminFiltreStatut !== 'toutes' ? '?statut=' + adminFiltreStatut : '';
   const data = await api('/admin/annonces' + param);
-  const statutCouleurs = { en_attente: ['#E6F1FB', '#0C447C'], disponible: ['#EAF3DE', '#27500A'], en_cours: ['#FAEEDA', '#854F0B'], indisponible: ['#FCEBEB', '#A32D2D'], rejetee: ['#FCEBEB', '#A32D2D'] };
+  const th = (l) => '<th style="text-align:left;padding:8px 10px;font-size:10.5px;color:#888780;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;">' + l + '</th>';
+  const td = (contenu, extra = '') => '<td style="padding:9px 10px;font-size:12px;color:#1a1814;vertical-align:middle;' + extra + '">' + contenu + '</td>';
+  const btnAction = (label, couleur, onclick, titre) =>
+    '<button onclick="' + onclick + '" title="' + titre + '" style="border:0;border-radius:8px;background:' + couleur + ';color:#fff;font-size:11px;font-weight:700;padding:6px 8px;cursor:pointer;font-family:inherit;white-space:nowrap;">' + label + '</button>';
+
   c.innerHTML =
-    '<select style="margin-bottom:10px;" onchange="adminFiltreStatut=this.value;adminOnglet(\'annonces\')">' +
+    '<select style="margin-bottom:12px;max-width:260px;" onchange="adminFiltreStatut=this.value;adminOnglet(\'annonces\')">' +
       ['toutes', 'en_attente', 'disponible', 'indisponible'].map(s => '<option value="' + s + '"' + (s === adminFiltreStatut ? ' selected' : '') + '>' + (s === 'toutes' ? 'Toutes les annonces' : s) + '</option>').join('') +
     '</select>' +
-    (data.annonces.length === 0 ? '<div class="alert alert-info">Aucune annonce pour ce filtre.</div>' :
-    data.annonces.map(a => {
-      const [bg, col] = statutCouleurs[a.statut] || ['#F1EFE8', '#888780'];
-      return '<div class="card" style="margin-bottom:8px;">' +
-        '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">' +
-          '<div style="flex:1;min-width:0;">' +
-            '<div style="font-size:13px;font-weight:700;">' + esc(a.titre || a.categorie) + '</div>' +
-            '<div style="font-size:11.5px;color:#6b6560;margin-top:2px;">' + esc(a.ville) + ' · ' + parseInt(a.prix).toLocaleString() + ' FCFA · ' + esc(a.proprietaire) + '</div>' +
-          '</div>' +
-          '<div style="background:' + bg + ';color:' + col + ';padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap;">' + esc(a.statut) + '</div>' +
-        '</div>' +
-        '<div style="display:flex;gap:6px;margin-top:10px;">' +
-          '<button class="btn" style="background:#3B6D11;font-size:11px;padding:8px 4px;" onclick="adminValider(\'' + escJs(a.id) + '\')">Valider</button>' +
-          '<button class="btn" style="background:#BA7517;font-size:11px;padding:8px 4px;" onclick="adminRejeter(\'' + escJs(a.id) + '\')">Rejeter</button>' +
-          '<button class="btn" style="background:#A32D2D;font-size:11px;padding:8px 4px;" onclick="adminSupprimer(\'' + escJs(a.id) + '\', \'' + escJs(a.titre || '') + '\')">Supprimer</button>' +
-        '</div>' +
-      '</div>';
-    }).join(''));
+    (data.annonces.length === 0
+      ? '<div style="text-align:center;padding:50px 0;color:#888780;font-size:13px;">Aucune annonce pour le moment</div>'
+      : '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;background:#ffffff;">' +
+        '<thead><tr style="border-bottom:1px solid #e8e4dc;">' + th('Titre') + th('Ville') + th('Prix') + th('Statut') + th('Propriétaire') + th('Actions') + '</tr></thead>' +
+        '<tbody>' +
+        data.annonces.map((a, i) => {
+          const [bg, col] = ADMIN_STATUT_BADGES[a.statut] || ['#F1EFE8', '#888780'];
+          return '<tr style="background:' + (i % 2 === 0 ? '#ffffff' : '#F7F5F0') + ';">' +
+            td('<span style="font-weight:600;">' + esc(a.titre || a.categorie) + '</span>') +
+            td(esc(a.ville)) +
+            td(parseInt(a.prix).toLocaleString() + ' F', 'white-space:nowrap;') +
+            td('<span style="background:' + bg + ';color:' + col + ';padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;white-space:nowrap;">' + esc(a.statut) + '</span>') +
+            td(esc(a.proprietaire)) +
+            td('<div style="display:flex;gap:5px;">' +
+              btnAction('✓ Valider', '#3B6D11', "adminValider('" + escJs(a.id) + "')", 'Vérifier et publier') +
+              btnAction('✗ Rejeter', '#BA7517', "adminRejeter('" + escJs(a.id) + "')", 'Passer en indisponible') +
+              btnAction('🗑 Supprimer', '#A32D2D', "adminSupprimer('" + escJs(a.id) + "', '" + escJs(a.titre || '') + "')", 'Suppression définitive') +
+            '</div>') +
+          '</tr>';
+        }).join('') +
+        '</tbody></table></div>');
 }
 
 async function adminValider(id) {
@@ -1909,27 +1948,51 @@ function adminSupprimer(id, titre) {
   }, 'Supprimer', 'Annuler');
 }
 
+// Tuile statistique colorée (partagée modal admin + tableau de bord du profil)
+function tuileStat(emoji, val, lbl, bg, couleur, tailleChiffre = 36) {
+  return '<div style="background:' + bg + ';border-radius:14px;padding:16px 14px;">' +
+    '<div style="font-size:16px;margin-bottom:6px;">' + emoji + '</div>' +
+    '<div style="font-size:' + tailleChiffre + 'px;font-weight:700;color:' + couleur + ';line-height:1.1;">' + val + '</div>' +
+    '<div style="font-size:12px;color:#4a4845;margin-top:4px;">' + lbl + '</div>' +
+  '</div>';
+}
+
 async function adminRendreStats() {
   const c = document.getElementById('admin-contenu');
   const d = await api('/admin/stats');
-  const tuile = (val, lbl) => '<div style="background:#F1EFE8;border-radius:12px;padding:14px;"><div style="font-size:20px;font-weight:700;">' + val + '</div><div style="font-size:11px;color:#6b6560;margin-top:2px;">' + lbl + '</div></div>';
-  c.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
-    tuile(d.annonces.total ?? '—', 'Annonces au total') +
-    tuile(d.users.total, 'Utilisateurs inscrits') +
-    tuile(d.users.abonnes_actifs ?? '—', 'Abonnements actifs') +
-    tuile(parseInt(d.revenus.mois_courant).toLocaleString() + ' F', 'Revenus du mois') +
+  c.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">' +
+    tuileStat('🏠', d.annonces.total ?? '—', 'Total annonces', '#FAEEDA', '#BA7517') +
+    tuileStat('👥', d.users.total, 'Utilisateurs inscrits', '#E6F1FB', '#0C447C') +
+    tuileStat('✅', d.users.abonnes_actifs ?? '—', 'Abonnements actifs', '#EAF3DE', '#3B6D11') +
+    tuileStat('💰', parseInt(d.revenus.mois_courant).toLocaleString(), 'Revenus du mois (FCFA)', '#FFF8EE', '#B8860B') +
   '</div>';
 }
+
+const ADMIN_ROLE_BADGES = {
+  admin: ['#FCEBEB', '#A32D2D'],
+  proprietaire: ['#FAEEDA', '#854F0B'],
+  agence: ['#FFF8EE', '#B8860B'],
+  chercheur: ['#E6F1FB', '#0C447C'],
+};
 
 async function adminRendreUsers() {
   const c = document.getElementById('admin-contenu');
   const d = await api('/admin/utilisateurs?limite=20');
-  c.innerHTML = (d.utilisateurs || []).map(u =>
-    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 2px;border-bottom:0.5px solid #e8e4dc;">' +
-      '<div style="flex:1;min-width:0;"><div style="font-size:12.5px;font-weight:600;">' + esc(u.prenom) + ' ' + esc(u.nom) + '</div>' +
-      '<div style="font-size:10.5px;color:#6b6560;">' + esc(u.role) + ' · ' + esc(u.abonnement) + '</div></div>' +
+  c.innerHTML = (d.utilisateurs || []).map(u => {
+    const [bg, col] = ADMIN_ROLE_BADGES[u.role] || ['#F1EFE8', '#888780'];
+    const initiales = ((u.prenom?.[0] || '') + (u.nom?.[0] || '')).toUpperCase();
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:0.5px solid #e8e4dc;background:#ffffff;">' +
+      '<div style="width:36px;height:36px;border-radius:18px;background:' + bg + ';color:' + col + ';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">' + esc(initiales) + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:12.5px;font-weight:600;color:#1a1814;">' + esc(u.prenom) + ' ' + esc(u.nom) + '</div>' +
+        '<div style="display:flex;gap:6px;align-items:center;margin-top:3px;">' +
+          '<span style="background:' + bg + ';color:' + col + ';padding:1px 7px;border-radius:8px;font-size:9.5px;font-weight:700;">' + esc(u.role) + '</span>' +
+          '<span style="font-size:10.5px;color:#6b6560;">' + esc(u.abonnement) + '</span>' +
+        '</div>' +
+      '</div>' +
       '<div style="font-size:10.5px;color:#B4B2A9;white-space:nowrap;">' + new Date(u.cree_le).toLocaleDateString('fr-FR') + '</div>' +
-    '</div>').join('') || '<div class="alert alert-info">Aucun utilisateur.</div>';
+    '</div>';
+  }).join('') || '<div style="text-align:center;padding:50px 0;color:#888780;font-size:13px;">Aucun utilisateur.</div>';
 }
 
 function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
