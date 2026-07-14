@@ -169,7 +169,10 @@ body.in-conversation .bottom-nav { display: none; }
 body.in-conversation .conv-input { bottom: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
 body.in-conversation #screen-conversation { padding-bottom: 90px; }
 body.in-conversation .app { padding-bottom: 0; }
-#carte-container { height: calc(100vh - 49px - 60px - 50px); position: relative; }
+/* position + z-index : contient les calques Leaflet (z-index 400-1000) sous la bottom-nav (z-index 50) */
+#screen-carte { position: relative; z-index: 1; }
+/* 56px réservés en bas pour que la carte ne passe pas derrière la bottom-nav */
+#carte-container { height: calc(100vh - 49px - 60px - 56px); position: relative; padding-bottom: 0; }
 #map { width: 100%; height: 100%; }
 .carte-villes { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 1000; display: flex; gap: 6px; overflow-x: auto; padding: 0; }
 .carte-villes::-webkit-scrollbar { display: none; }
@@ -509,7 +512,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-13-7';
+const APP_VERSION = '2026-07-14-1';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -704,6 +707,10 @@ function showScreen(name) {
   const tab = document.querySelector('.bottom-nav .tab[data-screen="' + name + '"]');
   if (tab) tab.classList.add('active');
   currentScreen = name;
+  // Persistance : restauré au prochain chargement (sauf écrans de session)
+  if (!['connexion', 'inscription', 'conversation'].includes(name)) {
+    localStorage.setItem('logisbj_screen', name);
+  }
   if (name === 'annonces') chargerAnnonces();
   if (name === 'carte') initCarte();
   if (name === 'messages') chargerConversations();
@@ -759,6 +766,9 @@ function majUI() {
   const pill = document.getElementById('user-pill');
   if (currentUser) { pill.style.display = 'flex'; pill.innerHTML = esc(currentUser.prenom) + ' (' + esc(currentUser.role) + ')'; }
   else { pill.style.display = 'none'; }
+  // Les chercheurs ne publient pas : item Publier masqué (bottom nav mobile = sidebar PC)
+  const tabPublier = document.querySelector('.bottom-nav .tab[data-screen="publier"]');
+  if (tabPublier) tabPublier.style.display = (currentUser && currentUser.role === 'chercheur') ? 'none' : '';
 }
 
 async function initSocket() {
@@ -833,13 +843,18 @@ const PAGE_SIZE = 10;
 let currentPage = 1;
 let totalAnnonces = [];
 
+// Villes du filtre (menu déroulant)
+const VILLES_FILTRE = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon', 'Natitingou', 'Ouidah', 'Kandi', 'Djougou', 'Dassa-Zoumé', 'Lokossa', 'Abomey', 'Savè', 'Malanville'];
+
 function renderFiltres() {
   // Types de biens désactivés — filtres simplifiés
   const villesBar = document.getElementById('filtres-villes');
   if (villesBar) {
     villesBar.innerHTML =
-      '<div class="chip ' + (filtres.ville === '' ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'\')" style="flex-shrink:0;">Toutes les villes</div>' +
-      VILLES.map(v => '<div class="chip ' + (filtres.ville === v ? 'active' : '') + '" onclick="setFiltre(\'ville\', \'' + v + '\')" style="flex-shrink:0;">' + v + '</div>').join('');
+      '<select onchange="setFiltre(\'ville\', this.value)" style="width:100%;background:#fff;border:1px solid #ede9e0;border-radius:10px;padding:9px 12px;font-size:13px;color:#1a1814;font-family:inherit;appearance:auto;margin:0;">' +
+        '<option value="">Toutes les villes</option>' +
+        VILLES_FILTRE.map(v => '<option value="' + v + '"' + (filtres.ville === v ? ' selected' : '') + '>' + v + '</option>').join('') +
+      '</select>';
   }
   const catsBar = document.getElementById('filtres-categories');
   if (catsBar) {
@@ -2098,7 +2113,11 @@ async function init() {
   renderFiltres();
   majUI();
   if (currentUser && token) { initSocket(); setTimeout(majBadgeMessages, 2000); }
-  showScreen('annonces');
+  // Restaurer le dernier écran actif (utilisateur connecté uniquement)
+  const ecranSauve = localStorage.getItem('logisbj_screen');
+  const ecranInitial = (currentUser && ecranSauve && !['connexion', 'inscription', 'conversation'].includes(ecranSauve) && document.getElementById('screen-' + ecranSauve))
+    ? ecranSauve : 'annonces';
+  showScreen(ecranInitial);
   if ('serviceWorker' in navigator) {
     try { const reg = await navigator.serviceWorker.register('/service-worker.js?v=' + APP_VERSION); console.log('PWA active', reg.scope); }
     catch (err) { console.warn('SW non enregistré:', err); }
