@@ -259,13 +259,13 @@ body.in-conversation .app { padding-bottom: 0; }
 .onb-lien { text-align: center; font-size: 12px; color: #6b6560; margin-top: auto; padding-top: 22px; }
 .onb-lien a { color: #BA7517; font-weight: 700; cursor: pointer; text-decoration: none; }
 .onb-cgu { text-align: center; font-size: 11px; color: #B4B2A9; margin-top: 14px; }
-/* Empêche Chrome de peindre son fond jaune/bleu d'autofill sur le champ recherche */
-#search-input:-webkit-autofill,
-#search-input:-webkit-autofill:hover,
-#search-input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px #fff inset !important;
-  box-shadow: 0 0 0px 1000px #fff inset !important;
-}</style>
+/* Recherche en div contenteditable : aucun <input> = aucun autofill Chrome possible */
+#search-input:empty::before {
+  content: attr(data-placeholder);
+  color: #B4B2A9;
+  pointer-events: none;
+}
+#search-input:focus::before { content: none; }</style>
 </head>
 <body>
 <div id="offline-banner" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:60;background:#633806;color:#fff;text-align:center;font-size:12px;padding:7px 12px;">📴 Mode hors ligne — données du <span id="offline-date"></span></div>
@@ -312,10 +312,13 @@ body.in-conversation .app { padding-bottom: 0; }
     <div style="padding:8px 14px 4px;display:flex;align-items:center;gap:8px;">
       <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ede9e0;border-radius:12px;padding:8px 12px;">
         <span style="font-size:16px;color:#B4B2A9;">🔍</span>
-        <!-- Honeypot : absorbe l'autofill Chrome pour qu'il n'atterrisse pas sur le vrai champ ci-dessous -->
-        <input type="text" style="display:none" aria-hidden="true" tabindex="-1">
-        <input type="password" style="display:none" aria-hidden="true" tabindex="-1">
-        <input type="text" id="search-input" name="" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:16px;background:transparent;outline:none;flex:1;" oninput="rechercherAnnonces(this.value)">
+        <div id="search-input"
+             contenteditable="true"
+             role="searchbox"
+             aria-label="Rechercher un bien, une adresse, une ville..."
+             data-placeholder="Rechercher un bien, une adresse, une ville..."
+             style="flex:1;outline:none;font-size:13px;color:#1a1814;min-height:20px;cursor:text;font-family:inherit;"
+             oninput="rechercherAnnonces(this.textContent.trim())"></div>
         <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
       </div>
       <button style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#fff;border:0.5px solid #ede9e0;border-radius:10px;font-size:12px;font-weight:600;color:#4a4845;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
@@ -523,7 +526,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-14-7';
+const APP_VERSION = '2026-07-14-8';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -946,7 +949,7 @@ function rechercherAnnonces(val) {
 
 function viderRecherche() {
   clearTimeout(rechercheTimeout);
-  document.getElementById('search-input').value = '';
+  document.getElementById('search-input').textContent = '';
   document.getElementById('search-clear').style.display = 'none';
   filtres.recherche = '';
   chargerAnnonces();
@@ -2178,12 +2181,6 @@ async function onbRenvoyerOtp() {
 }
 
 async function init() {
-  // Anti-autocomplete Chrome : ni nom ni autocomplete standard sur ce champ
-  const s = document.getElementById('search-input');
-  if (s) {
-    s.setAttribute('autocomplete', 'new-password');
-    s.removeAttribute('name');
-  }
   await attendreServeur();
   setInterval(pingAPI, 14 * 60 * 1000);
   await chargerCategories();
