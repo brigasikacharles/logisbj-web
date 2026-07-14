@@ -318,7 +318,7 @@ body.in-conversation .app { padding-bottom: 0; }
              aria-label="Rechercher un bien, une adresse, une ville..."
              data-placeholder="Rechercher un bien, une adresse, une ville..."
              style="flex:1;outline:none;font-size:13px;color:#1a1814;min-height:20px;cursor:text;font-family:inherit;"
-             oninput="rechercherAnnonces(this.textContent.trim())"></div>
+             oninput="if(!this.textContent.trim())this.innerHTML='';rechercherAnnonces(this.textContent.trim())"></div>
         <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
       </div>
       <button style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#fff;border:0.5px solid #ede9e0;border-radius:10px;font-size:12px;font-weight:600;color:#4a4845;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
@@ -526,7 +526,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-14-8';
+const APP_VERSION = '2026-07-14-9';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -948,11 +948,13 @@ function rechercherAnnonces(val) {
 }
 
 function viderRecherche() {
-  clearTimeout(rechercheTimeout);
-  document.getElementById('search-input').textContent = '';
+  const s = document.getElementById('search-input');
+  if (s) {
+    s.textContent = '';
+    s.dispatchEvent(new Event('input'));
+    s.focus();
+  }
   document.getElementById('search-clear').style.display = 'none';
-  filtres.recherche = '';
-  chargerAnnonces();
 }
 
 function toggleFiltresAvances() {
