@@ -259,10 +259,13 @@ body.in-conversation .app { padding-bottom: 0; }
 .onb-lien { text-align: center; font-size: 12px; color: #6b6560; margin-top: auto; padding-top: 22px; }
 .onb-lien a { color: #BA7517; font-weight: 700; cursor: pointer; text-decoration: none; }
 .onb-cgu { text-align: center; font-size: 11px; color: #B4B2A9; margin-top: 14px; }
-input[name*="search-logisbj"] { -webkit-text-fill-color: inherit; }
-/* type="search" évite l'autocomplete mots de passe Chrome ; on masque ses décorations
-   natives (loupe/croix) pour garder l'icône 🔍 et le bouton ✕ personnalisés existants */
-#search-input::-webkit-search-decoration, #search-input::-webkit-search-cancel-button, #search-input::-webkit-search-results-button, #search-input::-webkit-search-results-decoration { -webkit-appearance: none; appearance: none; }</style>
+/* Empêche Chrome de peindre son fond jaune/bleu d'autofill sur le champ recherche */
+#search-input:-webkit-autofill,
+#search-input:-webkit-autofill:hover,
+#search-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #fff inset !important;
+  box-shadow: 0 0 0px 1000px #fff inset !important;
+}</style>
 </head>
 <body>
 <div id="offline-banner" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:60;background:#633806;color:#fff;text-align:center;font-size:12px;padding:7px 12px;">📴 Mode hors ligne — données du <span id="offline-date"></span></div>
@@ -309,7 +312,10 @@ input[name*="search-logisbj"] { -webkit-text-fill-color: inherit; }
     <div style="padding:8px 14px 4px;display:flex;align-items:center;gap:8px;">
       <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ede9e0;border-radius:12px;padding:8px 12px;">
         <span style="font-size:16px;color:#B4B2A9;">🔍</span>
-        <input type="search" id="search-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:16px;background:transparent;outline:none;flex:1;-webkit-appearance:none;appearance:none;" oninput="rechercherAnnonces(this.value)">
+        <!-- Honeypot : absorbe l'autofill Chrome pour qu'il n'atterrisse pas sur le vrai champ ci-dessous -->
+        <input type="text" style="display:none" aria-hidden="true" tabindex="-1">
+        <input type="password" style="display:none" aria-hidden="true" tabindex="-1">
+        <input type="text" id="search-input" name="" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:16px;background:transparent;outline:none;flex:1;" oninput="rechercherAnnonces(this.value)">
         <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
       </div>
       <button style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#fff;border:0.5px solid #ede9e0;border-radius:10px;font-size:12px;font-weight:600;color:#4a4845;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
@@ -517,7 +523,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-14-6';
+const APP_VERSION = '2026-07-14-7';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -2172,6 +2178,12 @@ async function onbRenvoyerOtp() {
 }
 
 async function init() {
+  // Anti-autocomplete Chrome : ni nom ni autocomplete standard sur ce champ
+  const s = document.getElementById('search-input');
+  if (s) {
+    s.setAttribute('autocomplete', 'new-password');
+    s.removeAttribute('name');
+  }
   await attendreServeur();
   setInterval(pingAPI, 14 * 60 * 1000);
   await chargerCategories();
@@ -2218,10 +2230,6 @@ async function posterAvis(annonceId) {
     setTimeout(() => location.reload(), 1200);
   } catch (err) { showToast(err.message || 'Erreur lors de la publication'); }
 }
-
-// Nom unique anti-autocomplete : empêche Chrome d'associer ce champ à un
-// historique de mots de passe/identifiants sauvegardés sous un nom stable.
-document.getElementById('search-input').name = 'search-logisbj-' + Date.now();
 
 // Villes du formulaire d'inscription classique (rempli immédiatement, sans attendre le réveil serveur)
 document.getElementById('reg-ville').innerHTML = optionsVilles();
