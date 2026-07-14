@@ -259,7 +259,10 @@ body.in-conversation .app { padding-bottom: 0; }
 .onb-lien { text-align: center; font-size: 12px; color: #6b6560; margin-top: auto; padding-top: 22px; }
 .onb-lien a { color: #BA7517; font-weight: 700; cursor: pointer; text-decoration: none; }
 .onb-cgu { text-align: center; font-size: 11px; color: #B4B2A9; margin-top: 14px; }
-input[name*="search-logisbj"] { -webkit-text-fill-color: inherit; }</style>
+input[name*="search-logisbj"] { -webkit-text-fill-color: inherit; }
+/* type="search" évite l'autocomplete mots de passe Chrome ; on masque ses décorations
+   natives (loupe/croix) pour garder l'icône 🔍 et le bouton ✕ personnalisés existants */
+#search-input::-webkit-search-decoration, #search-input::-webkit-search-cancel-button, #search-input::-webkit-search-results-button, #search-input::-webkit-search-results-decoration { -webkit-appearance: none; appearance: none; }</style>
 </head>
 <body>
 <div id="offline-banner" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:60;background:#633806;color:#fff;text-align:center;font-size:12px;padding:7px 12px;">📴 Mode hors ligne — données du <span id="offline-date"></span></div>
@@ -306,7 +309,7 @@ input[name*="search-logisbj"] { -webkit-text-fill-color: inherit; }</style>
     <div style="padding:8px 14px 4px;display:flex;align-items:center;gap:8px;">
       <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ede9e0;border-radius:12px;padding:8px 12px;">
         <span style="font-size:16px;color:#B4B2A9;">🔍</span>
-        <input type="text" id="search-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:16px;background:transparent;outline:none;flex:1;" oninput="rechercherAnnonces(this.value)">
+        <input type="search" id="search-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:16px;background:transparent;outline:none;flex:1;-webkit-appearance:none;appearance:none;" oninput="rechercherAnnonces(this.value)">
         <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
       </div>
       <button style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#fff;border:0.5px solid #ede9e0;border-radius:10px;font-size:12px;font-weight:600;color:#4a4845;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
