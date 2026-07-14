@@ -517,7 +517,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-14-4';
+const APP_VERSION = '2026-07-14-6';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -585,6 +585,25 @@ const VILLES_COORDS = {
   'Ouidah':        { lat: 6.3600,  lng: 2.0850, zoom: 12 },
   'Kandi':         { lat: 11.1333, lng: 2.9333, zoom: 12 },
   'Djougou':       { lat: 9.7000,  lng: 1.6667, zoom: 12 },
+  'Pobè':          { lat: 7.1167,  lng: 2.6667, zoom: 12 },
+  'Sakété':        { lat: 6.7333,  lng: 2.6500, zoom: 12 },
+  'Comè':          { lat: 6.4000,  lng: 1.8833, zoom: 12 },
+  'Dogbo':         { lat: 6.7833,  lng: 1.7833, zoom: 12 },
+  'Bembèrèkè':     { lat: 10.2167, lng: 2.6667, zoom: 12 },
+  'Malanville':    { lat: 11.8667, lng: 3.3833, zoom: 12 },
+  'Nikki':         { lat: 9.9333,  lng: 3.2167, zoom: 12 },
+  'Banikoara':     { lat: 11.3000, lng: 2.4333, zoom: 12 },
+  'Tchaourou':     { lat: 8.8833,  lng: 2.6000, zoom: 12 },
+  'Glazoué':       { lat: 8.0000,  lng: 2.2167, zoom: 12 },
+  'Savalou':       { lat: 7.9333,  lng: 1.9750, zoom: 12 },
+  'Aplahoué':      { lat: 6.9333,  lng: 1.6833, zoom: 12 },
+  'Azovè':         { lat: 6.9667,  lng: 1.8667, zoom: 12 },
+  'Kétou':         { lat: 7.3667,  lng: 2.6000, zoom: 12 },
+  'Ifangni':       { lat: 6.6667,  lng: 2.7167, zoom: 12 },
+  'Tanguiéta':     { lat: 10.6167, lng: 1.2667, zoom: 12 },
+  'Kouandé':       { lat: 10.3333, lng: 1.6833, zoom: 12 },
+  'Savè':          { lat: 8.0333,  lng: 2.4833, zoom: 12 },
+  'Dassa-Zoumé':   { lat: 7.7500,  lng: 2.1833, zoom: 12 },
 };
 const STATUT_COULEURS = { disponible: '#3B6D11', en_cours: '#854F0B', indisponible: '#791F1F', en_attente: '#0C447C' };
 const EQUIP_LABELS = {
