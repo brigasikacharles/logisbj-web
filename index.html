@@ -176,8 +176,6 @@ body.in-conversation .app { padding-bottom: 0; }
 #map { width: 100%; height: 100%; }
 .carte-villes { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 1000; display: flex; gap: 6px; overflow-x: auto; padding: 0; }
 .carte-villes::-webkit-scrollbar { display: none; }
-.carte-ville-chip { flex-shrink: 0; padding: 7px 14px; border-radius: 18px; background: #fff; color: #4a4845; font-size: 12px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.carte-ville-chip.active { background: #BA7517; color: #fff; }
 .carte-fiche { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 1000; background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 -2px 12px rgba(0,0,0,0.12); display: none; }
 .carte-fiche.active { display: block; }
 .carte-fiche-close { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; background: #F1EFE8; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; }
@@ -304,7 +302,7 @@ body.in-conversation .app { padding-bottom: 0; }
     <div style="padding:8px 14px 4px;display:flex;align-items:center;gap:8px;">
       <div style="flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #ede9e0;border-radius:12px;padding:8px 12px;">
         <span style="font-size:16px;color:#B4B2A9;">🔍</span>
-        <input type="text" id="search-input" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:16px;background:transparent;outline:none;flex:1;" oninput="rechercherAnnonces(this.value)">
+        <input type="text" id="search-input" autocomplete="off" placeholder="Rechercher un bien, une adresse, une ville..." style="border:0;margin:0;padding:0;font-size:16px;background:transparent;outline:none;flex:1;" oninput="rechercherAnnonces(this.value)">
         <span id="search-clear" style="font-size:13px;color:#B4B2A9;cursor:pointer;display:none;" onclick="viderRecherche()">✕</span>
       </div>
       <button style="display:flex;align-items:center;gap:5px;padding:8px 12px;background:#fff;border:0.5px solid #ede9e0;border-radius:10px;font-size:12px;font-weight:600;color:#4a4845;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="toggleFiltresAvances()" id="btn-filtres-plus">⚙ Filtres</button>
@@ -321,11 +319,11 @@ body.in-conversation .app { padding-bottom: 0; }
       <div style="display:flex;gap:10px;margin-bottom:10px;">
         <div style="flex:1;">
           <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:4px;display:block;">Prix min (FCFA)</label>
-          <input type="number" id="filtre-prix-min" placeholder="0" style="margin:0;padding:8px 10px;font-size:16px;" oninput="appliquerFiltresPrix()">
+          <input type="number" id="filtre-prix-min" autocomplete="off" placeholder="0" style="margin:0;padding:8px 10px;font-size:16px;" oninput="appliquerFiltresPrix()">
         </div>
         <div style="flex:1;">
           <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:4px;display:block;">Prix max (FCFA)</label>
-          <input type="number" id="filtre-prix-max" placeholder="500000" style="margin:0;padding:8px 10px;font-size:16px;" oninput="appliquerFiltresPrix()">
+          <input type="number" id="filtre-prix-max" autocomplete="off" placeholder="500000" style="margin:0;padding:8px 10px;font-size:16px;" oninput="appliquerFiltresPrix()">
         </div>
       </div>
       <label style="font-size:11px;font-weight:600;color:#4a4845;margin-bottom:6px;display:block;">Statut</label>
@@ -340,8 +338,10 @@ body.in-conversation .app { padding-bottom: 0; }
   </div>
 
  <div id="screen-carte" class="screen" style="padding:0;">
-    <div style="background:#fff;padding:10px 14px;border-bottom:0.5px solid #e8e4dc;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;">
-      <div id="carte-villes-bar" style="display:flex;gap:6px;flex-shrink:0;"></div>
+    <div style="background:#fff;padding:10px 14px;border-bottom:0.5px solid #e8e4dc;">
+      <select id="carte-ville-select" autocomplete="off" onchange="centrerVilleSelect(this.value)" style="width:100%;padding:9px 12px;border:0.5px solid #ede9e0;border-radius:10px;font-size:13px;background:#fff;font-family:inherit;margin:0;">
+        <option value="">Centrer sur une ville...</option>
+      </select>
     </div>
     <div id="carte-container">
       <div id="map"></div>
@@ -509,7 +509,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-14-2';
+const APP_VERSION = '2026-07-14-3';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -565,13 +565,18 @@ let prixTimeout = null;
 let rechercheTimeout = null;
 let annonceDetailCourante = null;
 
-const VILLES = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon'];
 const VILLES_COORDS = {
-  'Cotonou':       { lat: 6.3703, lng: 2.3912, zoom: 12 },
-  'Porto-Novo':    { lat: 6.4969, lng: 2.6289, zoom: 12 },
-  'Parakou':       { lat: 9.3370, lng: 2.6283, zoom: 12 },
-  'Abomey-Calavi': { lat: 6.4500, lng: 2.3557, zoom: 12 },
-  'Bohicon':       { lat: 7.1810, lng: 2.0665, zoom: 12 },
+  'Cotonou':       { lat: 6.3654,  lng: 2.4183, zoom: 12 },
+  'Porto-Novo':    { lat: 6.4969,  lng: 2.6289, zoom: 12 },
+  'Parakou':       { lat: 9.3370,  lng: 2.6280, zoom: 12 },
+  'Abomey-Calavi': { lat: 6.4484,  lng: 2.3559, zoom: 12 },
+  'Bohicon':       { lat: 7.1667,  lng: 2.0667, zoom: 12 },
+  'Natitingou':    { lat: 10.3167, lng: 1.3667, zoom: 12 },
+  'Abomey':        { lat: 7.1833,  lng: 1.9833, zoom: 12 },
+  'Lokossa':       { lat: 6.6333,  lng: 1.7167, zoom: 12 },
+  'Ouidah':        { lat: 6.3600,  lng: 2.0850, zoom: 12 },
+  'Kandi':         { lat: 11.1333, lng: 2.9333, zoom: 12 },
+  'Djougou':       { lat: 9.7000,  lng: 1.6667, zoom: 12 },
 };
 const STATUT_COULEURS = { disponible: '#3B6D11', en_cours: '#854F0B', indisponible: '#791F1F', en_attente: '#0C447C' };
 const EQUIP_LABELS = {
@@ -840,17 +845,14 @@ const PAGE_SIZE = 10;
 let currentPage = 1;
 let totalAnnonces = [];
 
-// Villes du filtre (menu déroulant)
-const VILLES_FILTRE = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon', 'Natitingou', 'Ouidah', 'Kandi', 'Djougou', 'Dassa-Zoumé', 'Lokossa', 'Abomey', 'Savè', 'Malanville'];
-
 function renderFiltres() {
   // Types de biens désactivés — filtres simplifiés
   const villesBar = document.getElementById('filtres-villes');
   if (villesBar) {
     villesBar.innerHTML =
-      '<select onchange="setFiltre(\'ville\', this.value)" style="width:100%;background:#fff;border:1px solid #ede9e0;border-radius:10px;padding:9px 12px;font-size:13px;color:#1a1814;font-family:inherit;appearance:auto;margin:0;">' +
+      '<select id="filtre-ville-select" autocomplete="off" onchange="setFiltre(\'ville\', this.value)" style="width:100%;padding:9px 12px;border:0.5px solid #ede9e0;border-radius:10px;font-size:13px;background:#fff;font-family:inherit;margin:0;">' +
         '<option value="">Toutes les villes</option>' +
-        VILLES_FILTRE.map(v => '<option value="' + v + '"' + (filtres.ville === v ? ' selected' : '') + '>' + v + '</option>').join('') +
+        optionsVilles(filtres.ville) +
       '</select>';
   }
   const catsBar = document.getElementById('filtres-categories');
@@ -1311,20 +1313,25 @@ async function initCarte() {
     if (mapEl) mapEl.innerHTML = '<div class="loading">Carte indisponible (connexion). Réessayez plus tard.</div>';
     return;
   }
-  map = L.map('map').setView([6.3703, 2.3912], 12);
+  map = L.map('map').setView([6.3654, 2.4183], 12);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap contributors © CARTO', subdomains: 'abcd', maxZoom: 19 }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
-  const bar = document.getElementById('carte-villes-bar');
-  bar.innerHTML = VILLES.map((v, i) => '<div class="carte-ville-chip ' + (i === 0 ? 'active' : '') + '" onclick="centrerVille(\'' + v + '\', this)">' + v + '</div>').join('');
+  const select = document.getElementById('carte-ville-select');
+  if (select) select.innerHTML = '<option value="">Centrer sur une ville...</option>' + optionsVilles();
   chargerMarqueurs();
   setTimeout(() => { if (map) map.invalidateSize(); }, 100);
 }
 
-function centrerVille(ville, el) {
-  document.querySelectorAll('.carte-ville-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
+// Centre la carte sur la ville choisie (si coordonnées connues) et filtre les marqueurs affichés
+function centrerVilleSelect(ville) {
+  if (!ville) {
+    if (map) map.setView([6.3654, 2.4183], 12);
+    chargerMarqueurs();
+    return;
+  }
   const c = VILLES_COORDS[ville];
-  if (c && map) { map.setView([c.lat, c.lng], c.zoom); chargerMarqueurs(ville); }
+  if (c && map) map.setView([c.lat, c.lng], c.zoom || 12);
+  chargerMarqueurs(ville);
 }
 
 async function chargerMarqueurs(ville) {
