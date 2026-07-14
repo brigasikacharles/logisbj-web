@@ -389,22 +389,22 @@ body.in-conversation .app { padding-bottom: 0; }
     <div class="card">
       <h3>Se connecter</h3>
       <label>Téléphone</label>
-      <input type="tel" id="login-tel" placeholder="+229..." autocomplete="tel">
+      <input type="tel" id="login-tel" autocomplete="tel">
       <label>Mot de passe</label>
-      <input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password">
+      <input type="password" id="login-pwd" autocomplete="current-password">
       <button class="btn" onclick="seConnecter()">Se connecter</button>
       <div id="login-msg"></div>
     </div>
     <div class="card">
       <h3>Créer un compte</h3>
       <div class="row">
-        <div><label>Prénom</label><input type="text" id="reg-prenom" placeholder="Sika"></div>
-        <div><label>Nom</label><input type="text" id="reg-nom" placeholder="BRIGA"></div>
+        <div><label>Prénom</label><input type="text" id="reg-prenom"></div>
+        <div><label>Nom</label><input type="text" id="reg-nom"></div>
       </div>
       <label>Téléphone (+229...)</label>
-      <input type="tel" id="reg-tel" placeholder="+229...">
+      <input type="tel" id="reg-tel">
       <label>Mot de passe</label>
-      <input type="password" id="reg-pwd" placeholder="••••••••">
+      <input type="password" id="reg-pwd">
       <label>Rôle</label>
       <select id="reg-role">
         <option value="chercheur">Chercheur de logement</option>
@@ -412,10 +412,7 @@ body.in-conversation .app { padding-bottom: 0; }
         <option value="agence">Agence</option>
       </select>
       <label>Ville</label>
-      <select id="reg-ville">
-        <option>Cotonou</option><option>Porto-Novo</option><option>Parakou</option>
-        <option>Abomey-Calavi</option><option>Bohicon</option>
-      </select>
+      <select id="reg-ville"><!-- options remplies au chargement (optionsVilles) --></select>
       <button class="btn btn-secondary" onclick="sInscrire()">S'inscrire</button>
       <div id="reg-msg"></div>
     </div>
@@ -512,7 +509,7 @@ const API_URL = 'https://logisbj-backend.onrender.com/api';
 const API_BASE = 'https://logisbj-backend.onrender.com';
 // Version applicative : pilote le namespace de cache du service worker (?v=).
 // Bumpez cette valeur à chaque déploiement (ou injectez le hash de commit) pour purger les anciens caches.
-const APP_VERSION = '2026-07-14-1';
+const APP_VERSION = '2026-07-14-2';
 
 // ─── Chargement différé des scripts lourds (Leaflet, Socket.io, KKiaPay) ───
 const _assetCache = {};
@@ -2012,13 +2009,22 @@ async function adminRendreUsers() {
 
 function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
 
+// ─── Villes d'inscription (onboarding + formulaire classique) ──
+const VILLES_BENIN = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon', 'Natitingou', 'Abomey', 'Lokossa', 'Ouidah', 'Kandi', 'Djougou', 'Dassa-Zoumé', 'Savè', 'Pobè', 'Sakété', 'Comè', 'Dogbo', 'Bembèrèkè', 'Malanville', 'Nikki', 'Banikoara', 'Tchaourou', 'Glazoué', 'Savalou', 'Aplahoué', 'Azovè', 'Kétou', 'Ifangni', 'Tanguiéta', 'Kouandé'];
+const PAYS_HORS_BENIN = ['Togo', 'Côte d\'Ivoire', 'Sénégal', 'Burkina Faso', 'Niger', 'Nigeria', 'Ghana', 'France', 'Italie', 'Belgique', 'USA', 'Canada', 'Autre pays'];
+
+function optionsVilles(selection) {
+  return VILLES_BENIN.map(v => '<option' + (v === selection ? ' selected' : '') + '>' + esc(v) + '</option>').join('') +
+    '<option disabled>── Hors Bénin ──</option>' +
+    PAYS_HORS_BENIN.map(v => '<option' + (v === selection ? ' selected' : '') + '>' + esc(v) + '</option>').join('');
+}
+
 // ─── Tunnel d'onboarding ──────────────────────────────────────
-const ONB_VILLES = ['Cotonou', 'Porto-Novo', 'Parakou', 'Abomey-Calavi', 'Bohicon', 'Natitingou', 'Abomey', 'Lokossa', 'Ouidah', 'Kandi', 'Djougou', 'Dassa-Zoumé', 'Savè', 'Pobè', 'Sakété', 'Comè', 'Dogbo', 'Bembèrèkè', 'Malanville', 'Nikki', 'Autre ville du Bénin', 'Togo', 'Côte d\'Ivoire', 'Sénégal', 'Autre pays'];
 let onbRole = 'chercheur';
 let onbTimerSplash = null;
 
 function ouvrirOnboarding() {
-  document.getElementById('onb-ville').innerHTML = ONB_VILLES.map(v => '<option>' + esc(v) + '</option>').join('');
+  document.getElementById('onb-ville').innerHTML = optionsVilles();
   document.getElementById('onboarding').classList.add('visible');
   onbTimerSplash = setTimeout(() => onbAller('role'), 3000);
 }
@@ -2154,6 +2160,8 @@ async function posterAvis(annonceId) {
   } catch (err) { showToast(err.message || 'Erreur lors de la publication'); }
 }
 
+// Villes du formulaire d'inscription classique (rempli immédiatement, sans attendre le réveil serveur)
+document.getElementById('reg-ville').innerHTML = optionsVilles();
 // Tunnel d'onboarding : affiché à chaque visite tant que l'utilisateur n'est pas connecté
 if (!currentUser) ouvrirOnboarding();
 init();
